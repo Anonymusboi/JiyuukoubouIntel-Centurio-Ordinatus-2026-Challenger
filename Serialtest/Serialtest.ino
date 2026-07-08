@@ -1,4 +1,4 @@
-#include <DynamixelWorkbench.h>
+#include <Dynamixel2Arduino.h>
 
 #define BDPIN_LED_USER_1        22
 #define BDPIN_LED_USER_2        23
@@ -7,18 +7,16 @@
 #define BDPIN_PUSH_SW_1         34
 #define BDPIN_PUSH_SW_2         35
 #define BDPIN_BUZZER_           31
-#if defined(__OPENCM904__)
-  #define DEVICE_NAME "3" //Dynamixel on Serial3(USART3)  <-OpenCM 485EXP
-#elif defined(__OPENCR__)
-  #define DEVICE_NAME ""
-#endif   
 
 #define BAUDRATE  57600
 #define PACKET_HEADER_0 0xAA
 #define PACKET_HEADER_1 0x55
 #define PACKET_PAYLOAD_SIZE 3
 #define PACKET_CHECKSUM_IDX 3
-DynamixelWorkbench dxl_wb;
+
+// Using Serial3 for Dynamixel (OpenCR)
+const int DXL_DIR_PIN = 84;
+Dynamixel2Arduino dxl(Serial3, DXL_DIR_PIN);
 
 bool result = false;
 int led_pin = 13;
@@ -34,52 +32,46 @@ void setup() {
   pinMode(led_pin_user[2], OUTPUT);
   pinMode(led_pin_user[3], OUTPUT);
   pinMode(BDPIN_PUSH_SW_2, INPUT);
-  // while(!Serial); // Wait for Opening Serial Monitor
 
-  const char *log;
-  bool result = false;
+  // Initialize Dynamixel2Arduino
+  dxl.begin(BAUDRATE);
 
-  uint16_t model_number = 0;
   char response = 'e';
-
   while(response != 'y') response = Serial.read(); //buffer to wait for python
 
-  result = dxl_wb.init(DEVICE_NAME, BAUDRATE, &log);
-  if (result == false)
-  {
-    Serial.println(log);
-    Serial.println("Failed to init");
-  }
-  else
-  {
-    Serial.print("Succeeded to init : ");
-    Serial.println(BAUDRATE);  
-  }
+  // Ping and configure motors
   for(size_t i = 0; i < sizeof(dxl_id); i++){
     uint8_t id = dxl_id[i];
-    result = dxl_wb.ping(id, &model_number, &log);
-    if (result == false)
-    {
-      Serial.println(log);
-      Serial.println("Failed to ping: ");
-      Serial.print(id);
-    }
-    else
-    {
+    if(dxl.ping(id)){
       Serial.println("Succeeded to ping");
       Serial.print("id : ");
       Serial.print(id);
-      Serial.print(" model_number : ");
-      Serial.println(model_number);
+    }
+    else {
+      Serial.println("Failed to ping: ");
+      Serial.println(id);
     }
   }
 
+  // Set motors to velocity control mode and enable torque
   for(size_t i = 0; i < sizeof(dxl_id); i++){
     uint8_t id = dxl_id[i];
-    result = dxl_wb.jointMode(id, 0, 0, &log);
-    if(result == false){
-      Serial.println(log);
-      Serial.print("Failed to set joint mode for id: ");
+    if(dxl.setOperatingMode(id, OP_VELOCITY)){
+      Serial.print("Set velocity mode for id: ");
+      Serial.println(id);
+    }
+    else{
+      Serial.print("Failed to set velocity mode for id: ");
+      Serial.println(id);
+    }
+    
+    // Enable torque
+    if(dxl.torqueOn(id)){
+      Serial.print("Torque enabled for id: ");
+      Serial.println(id);
+    }
+    else{
+      Serial.print("Failed to enable torque for id: ");
       Serial.println(id);
     }
   }
@@ -133,30 +125,42 @@ void loop(){
 
     Serial.print("RAW input: ");
     Serial.println(input);
-    uint16_t motor1 = input >> 12;
-    uint16_t motor2 = input & 0x0FFF;
+    
+    // Extract as 12-bit signed values
+    int16_t motor1_raw = (input >> 12) & 0x0FFF;
+    int16_t motor2_raw = input & 0x0FFF;
+    
+    // Convert to signed range (-2047 to 2047)
+    if(motor1_raw > 2047) motor1_raw -= 4096;
+    if(motor2_raw > 2047) motor2_raw -= 4096;
+    
+    float motor1 = (float)motor1_raw;
+    float motor2 = (float)motor2_raw;
+    
     Serial.print("motor1: ");
     Serial.println(motor1);
     Serial.print("motor2: ");
     Serial.println(motor2);
 
-    goalPos(1, motor1);
-    goalPos(2, motor2);
+    goalVel(1, motor1);
+    goalVel(2, motor2);
     Serial.println("END");
   }
 }
 
-bool goalPos(int dxl_id, int input){
-  const char *log;
+bool goalVel(int dxl_id, float input){
   Serial.print("Moving Motor ");
   Serial.print(dxl_id);
-  Serial.print(" to ");
+  Serial.print(" to velocity ");
   Serial.println(input);
-  digitalWrite(led_pin_user[3], HIGH);
-  digitalWrite(led_pin_user[0], HIGH);
-  result = dxl_wb.goalPosition(dxl_id, input);
+  
+  result = dxl.setGoalVelocity(dxl_id, input);
   if(result == false){
-    Serial.print("goalPosition failed for id: ");
+    Serial.print("setGoalVelocity failed for id: ");
+    Serial.println(dxl_id);
+  }
+  else{
+    Serial.print("setGoalVelocity success for id: ");
     Serial.println(dxl_id);
   }
   return result;

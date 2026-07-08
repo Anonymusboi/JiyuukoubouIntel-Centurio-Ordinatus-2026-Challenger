@@ -5,9 +5,16 @@ import serial
 
 SERIAL_PORT = "COM4" #Serial port duh
 SERIAL_BAUD = 57600 #Serial BAUDRATE
-PACKET_HEADER_0 = 0xAA #Packet header bytes for the Arduino to recognize the start of a command packet.
-PACKET_HEADER_1 = 0x55 #Packet header bytes for the Arduino to recognize the start of the next command packet.
-MAX_12BIT = 0x0FFF #Max size for 12-bit values, to make sure that the values we send are within the dynamixel's goalPos range.
+#Variables related to sending goalPositions to the motors
+PACKET_HEADER_P0 = 0xAA #Packet header bytes for the Arduino to recognize the start of a command packet.
+PACKET_HEADER_P1 = 0x55 #Packet header bytes for the Arduino to recognize the start of the next command packet.
+MAX_POSITION = 4095 #Max size for 12-bit values, to make sure that the values we send are within the dynamixel's goalPos range.
+
+#Variables related to sending goalVelocity to the motors
+PACKET_HEADER_V0 = 0xAA
+PACKET_HEADER_V1 = 0x55
+MAX_VELOCITY = 1023 #Max size for 10-bit values, to make sure that the values we send are within the dynamixel's goalVel range.
+VELOCITY_SCALE = 2.0 #Scale factor for converting pixel offset to motor velocity
 
 #init camera
 cap = cv2.VideoCapture(1, cv2.CAP_DSHOW) #use webcam
@@ -65,9 +72,17 @@ def readSerial(ser, timeout=1.0):
 #this is the juicy part. Basically, it takes the values we send for both motors,
 #makes them kiss and then sends them to the Arduino as a singular 24-bit value.
 #The arduino then bitshifts the data to get the values, and then uses that to control the motors.
-def packageCommands24bit(v1, v2):
-    v1 = int(np.clip(v1, 0, MAX_12BIT))
-    v2 = int(np.clip(v2, 0, MAX_12BIT))
+def packageCommands(v1, v2, MAX_VALUE):
+    # Clip to signed 12-bit range (-2048 to 2047)
+    v1 = int(np.clip(v1, -2048, 2047))
+    v2 = int(np.clip(v2, -2048, 2047))
+    
+    # Convert to unsigned 12-bit for transmission (two's complement)
+    if v1 < 0:
+        v1 = v1 + 4096
+    if v2 < 0:
+        v2 = v2 + 4096
+    
     combined = (v1 << 12) | v2
     #THIS FUCKER IS THE THING THAT MAKES SHIT WORK
     #APPARENTLY YOU SEND DATA THROUGH SERIAL USING BYTES. 8 BIT PACKETS.
@@ -90,12 +105,12 @@ def packageCommands24bit(v1, v2):
     checksum = sum(payload) & 0xFF
     #Packet header 0 and 1 are used for synchronisation, so the arduino knows when a new packet starts.
     #without it, the arduino would just read the serial data as a stream of bytes and not know where to start reading the next packet.
-    return bytes([PACKET_HEADER_0, PACKET_HEADER_1] + payload + [checksum])
+    return bytes([PACKET_HEADER_P0, PACKET_HEADER_P1] + payload + [checksum])
 
 #do.... do i need to explain this part?
 def sendCommand(ser, motor1, motor2):
     #now kiss
-    packet = packageCommands24bit(motor1, motor2)
+    packet = packageCommands(motor1, motor2, MAX_VELOCITY)
     if ser is None:
         return False
     ser.write(packet)
@@ -131,54 +146,90 @@ def houghCircles(frame):
         minRadius=1,
         maxRadius=50,
     )
-
+    if circles is None:
+        return None
     #finds the biggest circle so we can track towards it
     biggest = findBiggestCircle(circles)
     if biggest is None:
         return None
+    
+    # Remove target ball from circles array to prevent overlap
+    target_idx = np.where((circles[0] == biggest).all(axis=1))[0]
+    if len(target_idx) > 0:
+        circles_filtered = np.delete(circles[0], target_idx[0], axis=0)
+        if circles_filtered.size > 0:
+            circles = np.array([circles_filtered])
+        else:
+            circles = None
+    
+    #Draw frame info
+    drawFrameInfo(frame, circles)
+    drawTargetBall(frame, biggest)
 
     x, y, r = int(biggest[0]), int(biggest[1]), int(biggest[2])
     distance = (ballDiameter * focalLength) / (r * 2)
     if distance > maxDist:
         return None
 
-    cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
-    cv2.circle(frame, (x, y), 2, (0, 0, 255), 3)
-    cv2.putText(frame, f"Ball ({x},{y}) r={r}", (x - 40, y - r - 20),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-    cv2.putText(frame, f"Dist: {distance:.0f} mm", (x - 40, y - r - 40),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
     return (x, y, r, distance)
 
 #computes how the motor moves based on the ball's x position in frame.
-def moveMotor(ball):
+def setMotorVelocity(ball):
     x, y, r, _ = ball
     center_x = cameraWidth / 2
-    center_y = cameraHeight / 2
     if abs(x - center_x) < deadzoneX * cameraWidth:
         return None
+    offset_x = center_x - x
+    velocity_x = offset_x * -VELOCITY_SCALE
 
+    return (velocity_x)
 
-def drawFrameInfo(frame, ball):
+def drawFrameInfo(frame, circles):
+    if circles is not None:
+        for circle in circles[0]:
+            x, y, r = int(circle[0]), int(circle[1]), int(circle[2])
+            # Draw non-target circles in YELLOW
+            cv2.circle(frame, (x, y), r, (0, 255, 255), 2) #Outline
+            cv2.circle(frame, (x, y), 3, (0, 255, 255), 1) #Center
+            cv2.putText(frame, f"({x},{y})", (x - 40, y - r - 5),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+            cv2.putText(frame, f"Diameter={r}", (x - 40, y - r - 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+            cv2.putText(frame, f"OffsetX={x - cameraWidth // 2}", (x - 40, y - r - 45),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+            
+def drawTargetBall(frame, ball):
     center_x = cameraWidth // 2
     cv2.line(frame, (center_x, 0), (center_x, cameraHeight), (255, 0, 0), 1)
     if ball is not None:
-        x, y, r, _ = ball
-        cv2.circle(frame, (x, y), 5, (255, 255, 0), -1)
-
+        x, y, r = int(ball[0]), int(ball[1]), int(ball[2])
+        # Draw TARGET circle in RED with thicker outline
+        cv2.circle(frame, (x, y), r, (0, 0, 255), 3) #Outline
+        cv2.circle(frame, (x, y), 2, (0, 0, 255), 3) #Center
+        cv2.putText(frame, f"({x},{y})", (x - 40, y - r - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, f"Diameter={r}", (x - 40, y - r - 25),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        cv2.putText(frame, f"OffsetX={x - center_x}", (x - 40, y - r - 45),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        cv2.putText(frame,"TARGET", (x - 40, y - r - 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
 def main():
     ser = initSerialPort()
     answer = input("Enter y to init Arduino, anything else to skip: ").strip().lower()
     if answer == "y" and ser is not None:
         ser.write(b"y")
-        while True:
+        deadline = time.time() + 10.0  # 10 second timeout
+        while time.time() < deadline:
             line = ser.readline().decode('utf-8', errors='ignore').strip()
             if line:
                 print("[SERIAL MONITOR]", line)
             if line == "Setup concluded.":
                 break
+        else:
+            print("Something broke during setup")
+            exit(0)
     else:
         print("Skipping Arduino init.")
 
@@ -189,33 +240,17 @@ def main():
             break
 
         ball = houghCircles(frame)
-        pan = tilt = None
         if ball is not None:
-            target = moveMotor(ball)
+            target = setMotorVelocity(ball)
             if target is not None:
-                raw_pan, raw_tilt = target
-                if smoothed_pan is None or smoothed_tilt is None:
-                    smoothed_pan = raw_pan
-                    smoothed_tilt = raw_tilt
-                else:
-                    smoothed_pan = smooth_value(smoothed_pan, raw_pan, SMOOTHING_ALPHA)
-                    smoothed_tilt = smooth_value(smoothed_tilt, raw_tilt, SMOOTHING_ALPHA)
+                VelocityX = target
+                # Send motor1 positive, motor2 negative (for opposite direction)
+                sendCommand(ser, VelocityX/2, VelocityX/2)
+            else:
+                sendCommand(ser, 0, 0)
+        else:
+            sendCommand(ser, 0, 0)
 
-                pan = int(smoothed_pan)
-                tilt = int(smoothed_tilt)
-                now = time.time()
-                if (
-                    previous_pan is None
-                    or abs(pan - previous_pan) > 40
-                    or abs(tilt - previous_tilt) > 40
-                    or (now - last_command_time) > MIN_COMMAND_INTERVAL
-                ):
-                    sendCommand(ser, pan, tilt)
-                    previous_pan = pan
-                    previous_tilt = tilt
-                    last_command_time = now
-
-        drawFrameInfo(frame, ball, pan or 0, tilt or 0)
         cv2.imshow("FaceBall", frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
