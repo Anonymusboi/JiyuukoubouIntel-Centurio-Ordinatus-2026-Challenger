@@ -3,16 +3,13 @@ import cv2
 import numpy as np
 import serial
 
+#Variables related to sending info to serial
 SERIAL_PORT = "COM4" #Serial port duh
 SERIAL_BAUD = 57600 #Serial BAUDRATE
-#Variables related to sending goalPositions to the motors
-PACKET_HEADER_P0 = 0xAA #Packet header bytes for the Arduino to recognize the start of a command packet.
-PACKET_HEADER_P1 = 0x55 #Packet header bytes for the Arduino to recognize the start of the next command packet.
-MAX_POSITION = 4095 #Max size for 12-bit values, to make sure that the values we send are within the dynamixel's goalPos range.
+PACKET_HEADER_0 = 0xAA #Packet header bytes for the Arduino to recognize the start of a command packet.
+PACKET_HEADER_1 = 0x55 #Packet header bytes for the Arduino to recognize the start of the next command packet.
 
 #Variables related to sending goalVelocity to the motors
-PACKET_HEADER_V0 = 0xAA
-PACKET_HEADER_V1 = 0x55
 MAX_VELOCITY = 1023 #Max size for 10-bit values, to make sure that the values we send are within the dynamixel's goalVel range.
 RVELOCITY_SCALE = 2.0 #Scale factor for converting pixel offset to motor velocity
 MVELOCITY_SCALE = 1 #
@@ -109,7 +106,7 @@ def packageCommands(v1, v2, MAX_VALUE):
     checksum = sum(payload) & 0xFF
     #Packet header 0 and 1 are used for synchronisation, so the arduino knows when a new packet starts.
     #without it, the arduino would just read the serial data as a stream of bytes and not know where to start reading the next packet.
-    return bytes([PACKET_HEADER_P0, PACKET_HEADER_P1] + payload + [checksum])
+    return bytes([PACKET_HEADER_0, PACKET_HEADER_1] + payload + [checksum])
 
 #do.... do i need to explain this part?
 def sendCommand(ser, motor1, motor2, moveMode):
@@ -269,9 +266,10 @@ def main():
                 sendCommand(ser, velocityX/2, velocityX/2, "R")
             else:
                 sendCommand(ser, 0, 0, "R")
-                #time.sleep(3) #delay 3 seconds to confirm ball is in midddle
+                #time.sleep(3) #delay 3 seconds to confirm ball is in middle
                 velocityX = approachBall
-                sendCommand(ser, velocityX, velocityX, "F")
+                if velocityX != 0:
+                    sendCommand(ser, velocityX, velocityX, "F") #Move towards the ball
 
         cv2.imshow("FaceBall", frame)
 

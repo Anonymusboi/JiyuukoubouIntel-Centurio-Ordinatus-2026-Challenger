@@ -21,7 +21,7 @@ Dynamixel2Arduino dxl(Serial3, DXL_DIR_PIN);
 bool result = false;
 int led_pin = 13;
 int led_pin_user[4] = { BDPIN_LED_USER_1, BDPIN_LED_USER_2, BDPIN_LED_USER_3, BDPIN_LED_USER_4 };
-uint8_t dxl_id[2] = {1, 2};
+uint8_t dxl_id[2] = {1, 2, 3};
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(57600);
