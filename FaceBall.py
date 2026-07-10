@@ -14,7 +14,8 @@ MAX_POSITION = 4095 #Max size for 12-bit values, to make sure that the values we
 PACKET_HEADER_V0 = 0xAA
 PACKET_HEADER_V1 = 0x55
 MAX_VELOCITY = 1023 #Max size for 10-bit values, to make sure that the values we send are within the dynamixel's goalVel range.
-VELOCITY_SCALE = 2.0 #Scale factor for converting pixel offset to motor velocity
+RVELOCITY_SCALE = 2.0 #Scale factor for converting pixel offset to motor velocity
+MVELOCITY_SCALE = 1 #
 
 #init camera
 cap = cv2.VideoCapture(1, cv2.CAP_DSHOW) #use webcam
@@ -30,8 +31,11 @@ ballDiameter = 66 # Diameter of the ball in millimeters
 focalLength = (18 * 2 * 1126) / ballDiameter
 maxDist = 2700 # Maximum distance (MM) to consider a detection valid [arena's diagonal] (if it's over, that's probably a guy)
 
-# Motor control calibration values
+# Motor control calibration values for rotation
 deadzoneX = 0.05 # Deadzone for X-axis (pan) control
+
+#Variables related to approaching ball
+targetBallSize = 100 #How big the ball should be to be counted as "in range" in pixels
 
 #initialise serial port
 def initSerialPort():
@@ -108,8 +112,19 @@ def packageCommands(v1, v2, MAX_VALUE):
     return bytes([PACKET_HEADER_P0, PACKET_HEADER_P1] + payload + [checksum])
 
 #do.... do i need to explain this part?
-def sendCommand(ser, motor1, motor2):
-    #now kiss
+def sendCommand(ser, motor1, motor2, moveMode):
+    match moveMode.upper():
+        case "R":
+            pass
+        case "L":
+            motor1 *= -1
+            motor2 *= -1
+        case "F":
+            motor2 *= -1
+        case "B":
+            motor1 *= -1
+        case _:
+            print("Unexpected moveMode, but proceeding anyways with default")
     packet = packageCommands(motor1, motor2, MAX_VELOCITY)
     if ser is None:
         return False
@@ -173,14 +188,21 @@ def houghCircles(frame):
 
     return (x, y, r, distance)
 
+def approachBall(ball):
+    x, y, r, _ = ball
+    if r >= targetBallSize:
+        return 0
+    velocity_x = 500 * MVELOCITY_SCALE
+    return(velocity_x)
+
 #computes how the motor moves based on the ball's x position in frame.
-def setMotorVelocity(ball):
+def faceBall(ball):
     x, y, r, _ = ball
     center_x = cameraWidth / 2
     if abs(x - center_x) < deadzoneX * cameraWidth:
-        return None
+        return 0
     offset_x = center_x - x
-    velocity_x = offset_x * -VELOCITY_SCALE
+    velocity_x = offset_x * -RVELOCITY_SCALE #negative velocity scale since the motors are reversed?
 
     return (velocity_x)
 
@@ -241,15 +263,15 @@ def main():
 
         ball = houghCircles(frame)
         if ball is not None:
-            target = setMotorVelocity(ball)
-            if target is not None:
-                VelocityX = target
+            velocityX = faceBall(ball)
+            if velocityX != 0:
                 # Send motor1 positive, motor2 negative (for opposite direction)
-                sendCommand(ser, VelocityX/2, VelocityX/2)
+                sendCommand(ser, velocityX/2, velocityX/2, "R")
             else:
-                sendCommand(ser, 0, 0)
-        else:
-            sendCommand(ser, 0, 0)
+                sendCommand(ser, 0, 0, "R")
+                #time.sleep(3) #delay 3 seconds to confirm ball is in midddle
+                velocityX = approachBall
+                sendCommand(ser, velocityX, velocityX, "F")
 
         cv2.imshow("FaceBall", frame)
 
