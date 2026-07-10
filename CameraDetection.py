@@ -1,3 +1,16 @@
+"""
+CameraDetection Module
+
+Detects different coloured balls in camera feed using HSV color masking and Hough Circle detection.
+Calculates ball position and distance from camera using focal length calibration.
+
+---
+カメラ検出モジュール
+
+HSV色マスキングと円形ハフ変換を使用してカメラフィードから異なる色のボールを検出できる。
+焦点距離キャリブレーションを使用して、ボールの位置とカメラからの距離を計算できる。
+"""
+
 import cv2
 import numpy as np
 

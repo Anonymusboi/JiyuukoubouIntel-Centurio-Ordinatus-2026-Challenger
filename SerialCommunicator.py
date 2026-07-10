@@ -1,3 +1,22 @@
+"""
+SerialCommunicator Module
+
+Handles serial communication with Arduino for motor control.
+Packages motor commands into 24-bit packets with headers and checksums for reliable transmission.
+Reads responses from serial port with a timeout.
+^this function is because Arduino IDE's Serial Monitor is unable to be used when python is communicating
+through serial
+
+---
+シリアル通信モジュール
+
+Arduinoとのシリアル通信を処理し、モーター制御を行う。
+モーターコマンドをヘッダーとサムチェック付きの24ビットパケットにパッケージ化して確実に送信する。
+タイムアウト機能付きでシリアルポートからの応答を読み取る。
+^Pythonがシリアル通信を行っているとき、Arduino IDEのシリアルモニターは使用できないため。
+
+"""
+
 import serial
 import numpy as np
 import time
