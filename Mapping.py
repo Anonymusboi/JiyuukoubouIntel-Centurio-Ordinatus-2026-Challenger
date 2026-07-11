@@ -32,8 +32,55 @@ walls = [
     #Right
     ((88,180), (88,90)),
     #Bottom
-    ((88,90), (60,90))
+    ((88,90), (60,90)),
+    
+    #Basket Walls
+    #red
+    ((0,60), (-28,60)),
+    ((-28,60), (-28,90)),
+    ((-28.90), (0,90)),
+    #yellow
+    ((0,60), (-28,60)),
+    ((-28,60), (-28,90)),
+    ((-28.90), (0,90)),
+    #blue
+    ((0,60), (-28,60)),
+    ((-28,60), (-28,90)),
+    ((-28.90), (0,90))
 ]
+
+lines =[
+    #Setup Line
+    ((0,49), (50,49)),
+    #Basket Lines
+    ((5,60), (5,90)),
+    ((5,125), (5,155)),
+    ((5,190), (5,220)),
+    #Line Trace Checkpoints
+    ((15,75), (45,75)),
+    ((15,140), (45,140)),
+    ((60,220), (60,190)),
+    ((119,180), (149,180)),
+    ((119,55), (149,55)),
+    #The Line Trace itself (No curves)
+    ((30,75), (30,190)),
+    ((45,205), (119,205)),
+    ((134,190), (134,50)),
+    #Line Trace Curves
+    #Left
+    ((30,190), (31.21,195.74)),
+    ((31.21,195.74), (34.477,200.52)),
+    ((34.477,200.52),(39.256,203.79)),
+    ((39.256,203.79), (45,205)),
+    #Right
+    ((119,205), (124.74,203.79)),
+    ((124.74, 203.79), (129.52,200.52)),
+    ((129.52,200.52), (132.79,195.74)),
+    ((132.79,195.74), (134,190)),
+    #Island Line
+    ((74,90), (74,180))
+]
+
 
 class CommonObject:
     def __init__(self, x, y, size):
@@ -82,7 +129,11 @@ def renderMap():
         startPoint = worldToScreenCoords(*start, bounds)
         endPoint = worldToScreenCoords(*end, bounds)
         pygame.draw.line(surface, "black", startPoint, endPoint, width=3)
-
+    for start, end in lines:
+        startPoint = worldToScreenCoords(*start, bounds)
+        endPoint = worldToScreenCoords(*end, bounds)
+        pygame.draw.line(surface, "black", startPoint, endPoint, width=3)
+        
     return surface
 
 pygame.init()
