@@ -3,11 +3,14 @@ import pygame
 import numpy as np
 
 #30 pixel margin
-arenaWidth = 180 + 30 
-arenaHeight = 180 + 50 + 30
+arenaWidth = 180 + 28
+arenaHeight = 180 + 50
 
-windowWidth = 900
-windowHeight = 600
+#Scale window (based on x value) proportional to arena,
+margin =  28
+windowWidth = 800
+scale = (windowWidth - margin*2)/arenaWidth
+windowHeight = int(scale*arenaHeight + margin*2 + 1)
 
 
 walls = [
@@ -38,15 +41,15 @@ walls = [
     #red
     ((0,60), (-28,60)),
     ((-28,60), (-28,90)),
-    ((-28.90), (0,90)),
+    ((-28,90), (0,90)),
     #yellow
-    ((0,60), (-28,60)),
-    ((-28,60), (-28,90)),
-    ((-28.90), (0,90)),
+    ((0,125), (-28,125)),
+    ((-28,125), (-28,155)),
+    ((-28,155), (0,155)),
     #blue
-    ((0,60), (-28,60)),
-    ((-28,60), (-28,90)),
-    ((-28.90), (0,90))
+    ((0,190), (-28,190)),
+    ((-28,190), (-28,220)),
+    ((-28,220), (0,220))
 ]
 
 lines =[
@@ -81,6 +84,16 @@ lines =[
     ((74,90), (74,180))
 ]
 
+customMarkings =[
+    #Basket Lines
+    #red
+    ((0,60), (0,90), "red"),
+    ((0,125), (0,155), "yellow"),
+    ((0,190), (0,220), "blue")
+    #yellow
+    #blue
+]
+
 
 class CommonObject:
     def __init__(self, x, y, size):
@@ -101,42 +114,36 @@ class Robot(CommonObject):
     def __init__(self, x, y, size):
         super().__init__(x, y, size)
         
-        
-def worldToScreenCoords(x, y, bounds):
-    min_x, min_y, max_x, max_y = bounds
-    world_width = max(1, max_x - min_x)
-    world_height = max(1, max_y - min_y)
-    margin = 20
-
-    scale_x = (windowWidth - margin * 2) / world_width
-    scale_y = (windowHeight - margin * 2) / world_height
-    scale = min(scale_x, scale_y)
+def worldToScreenCoords(x,y):
+    screen_x = (x+28)*scale + margin #28 for the -28 coordinate cuz i'm too lazy to rewrite the coordinates
+    screen_y = windowHeight - y*scale - margin
     
-
-
-    screen_x = int((x - min_x) * scale + margin)
-    screen_y = int(windowHeight - margin - (y - min_y) * scale)
     return screen_x, screen_y
-
+        
 def renderMap():
     surface = pygame.Surface((windowWidth, windowHeight))
     surface.fill((255, 255, 255))
-
-    pygame.draw.rect(surface, "black", (0, 0, windowWidth, windowHeight), width=4)
-
-    bounds = [0, 0, arenaWidth, arenaHeight]
+    
+    #draw square to separate from the window handle
+    pygame.draw.rect(surface, "black", (0,0, windowWidth, windowHeight), width=4) 
+    
     for start, end in walls:
-        startPoint = worldToScreenCoords(*start, bounds)
-        endPoint = worldToScreenCoords(*end, bounds)
-        pygame.draw.line(surface, "black", startPoint, endPoint, width=3)
+        startPos = worldToScreenCoords(*start)
+        endPos = worldToScreenCoords(*end)
+        pygame.draw.line(surface, "black", startPos, endPos, width=3)
     for start, end in lines:
-        startPoint = worldToScreenCoords(*start, bounds)
-        endPoint = worldToScreenCoords(*end, bounds)
-        pygame.draw.line(surface, "black", startPoint, endPoint, width=3)
-        
+        startPos = worldToScreenCoords(*start)
+        endPos = worldToScreenCoords(*end)
+        pygame.draw.line(surface, "black", startPos, endPos, width=3)
+    for start, end, colour in customMarkings:
+        startPos = worldToScreenCoords(*start)
+        endPos = worldToScreenCoords(*end)
+        pygame.draw.line(surface, colour, startPos, endPos, width=3)
     return surface
 
 pygame.init()
+print(windowWidth)
+print(windowHeight)
 screen = pygame.display.set_mode((windowWidth, windowHeight))
 map_surface = renderMap()
 
