@@ -1,5 +1,5 @@
 """
-SerialCommunicator Module
+serialCommunicator Module
 
 Handles serial communication with Arduino for motor control.
 Packages motor commands into 24-bit packets with headers and checksums for reliable transmission.

@@ -2,13 +2,13 @@ import time
 import cv2
 import numpy as np
 import serial
-import CameraDetection
-import SerialCommunicator
+import cameraVision
+import serialCommunicator
 
 #Camera Values
-cap = CameraDetection.cap
-cameraWidth = CameraDetection.cameraWidth
-cameraHeight = CameraDetection.cameraHeight
+cap = cameraVision.cap
+cameraWidth = cameraVision.cameraWidth
+cameraHeight = cameraVision.cameraHeight
 
 
 #Variables related to sending goalVelocity to the motors
@@ -41,7 +41,7 @@ def faceBall(ball):
     return (velocity_x)
 
 def main():
-    ser = SerialCommunicator.initSerialPort()
+    ser = serialCommunicator.initSerialPort()
     answer = input("Enter y to init Arduino, anything else to skip: ").strip().lower()
     if answer == "y" and ser is not None:
         ser.write(b"y")
@@ -64,18 +64,18 @@ def main():
             print("Failed to read camera frame")
             break
 
-        ball = CameraDetection.houghCircles(frame)
+        ball = cameraVision.houghCircles(frame)
         if ball is not None:
             velocityX = faceBall(ball)
             if velocityX != 0:
                 # Send motor1 positive, motor2 negative (for opposite direction)
-                SerialCommunicator.sendCommand(ser, velocityX/2, velocityX/2, MAX_VELOCITY, "R")
+                serialCommunicator.sendCommand(ser, velocityX/2, velocityX/2, MAX_VELOCITY, "R")
             else:
-                SerialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
+                serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
                 #time.sleep(3) #delay 3 seconds to confirm ball is in middle
                 velocityX = approachBall
                 if velocityX != 0:
-                    SerialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
+                    serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
 
         cv2.imshow("FaceBall", frame)
 

@@ -1,5 +1,5 @@
 """
-CameraDetection Module
+cameraVision Module
 
 Detects different coloured balls in camera feed using HSV color masking and Hough Circle detection.
 Calculates ball position and distance from camera using focal length calibration.

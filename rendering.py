@@ -112,7 +112,7 @@ class Ball(CommonObject):
         
 class Robot(CommonObject):
     def __init__(self, x, y, size):
-        super().__init__(x, y, size)
+        super().__init__(x, y, size) 
         
 def worldToScreenCoords(x,y):
     screen_x = (x+28)*scale + margin #28 for the -28 coordinate cuz i'm too lazy to rewrite the coordinates
