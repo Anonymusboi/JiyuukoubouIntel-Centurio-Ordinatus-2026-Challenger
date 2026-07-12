@@ -25,10 +25,8 @@ class Robot(CommonObject):
         self.headingD = heading
         self.headingR = math.radians(heading)
         
-def calculateLocalCoords(origin, distance, offset_x):
-    originCoords_x = origin.x
-    originCoords_y = origin.y
-    targetCoords = (originCoords_x + offset_x, originCoords_y + distance)
+def calculateLocalCoords(distance, offset_x):
+    targetCoords = (offset_x, distance)
     return targetCoords
 
 def localToWorldCoords(origin : Robot, target):

@@ -136,9 +136,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
     robot = mapping.Robot(104,115, 5, 5, angle)
-    testPoint = mapping.calculateLocalCoords(robot, 20, 50)
+    testPoint = mapping.calculateLocalCoords(20, 50)
     rotated = mapping.localToWorldCoords(robot, testPoint)
-    normal = mapping.calculateLocalCoords(robot, 20, 0)
+    normal = mapping.calculateLocalCoords(20, 0)
     rotatedNormal = mapping.localToWorldCoords(robot, normal)
     start = worldToScreenCoords(robot.x, robot.y)
     end = worldToScreenCoords(*rotated)
@@ -146,6 +146,14 @@ while running:
 
     surface = pygame.Surface((windowWidth, windowHeight))
     surface.fill((255, 255, 255))
+    print("NORMAL")
+    print(normal)
+    print(rotatedNormal)
+    print(normalEnd)
+    print("TARGET")
+    print(testPoint)
+    print(rotated)
+    print(end)
     pygame.draw.line(surface, "red", start, normalEnd, width=3)
     pygame.draw.line(surface, "green", start, end, width=3)
     screen.fill((255, 255, 255))
