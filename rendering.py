@@ -1,6 +1,7 @@
 import math
 import pygame
 import numpy as np
+import mapping
 
 #30 pixel margin
 arenaWidth = 180 + 28
@@ -93,26 +94,6 @@ customMarkings =[
     #yellow
     #blue
 ]
-
-
-class CommonObject:
-    def __init__(self, x, y, size):
-        self.x = x
-        self.y = y
-        self.size = size
-
-class Ball(CommonObject):
-    def __init__(self, x, y, size, colour):
-        super().__init__(x, y, size)
-        self.colour = colour
-        self.collected = False
-        
-    def markCollected(self):
-        self.collected = True
-        
-class Robot(CommonObject):
-    def __init__(self, x, y, size):
-        super().__init__(x, y, size) 
         
 def worldToScreenCoords(x,y):
     screen_x = (x+28)*scale + margin #28 for the -28 coordinate cuz i'm too lazy to rewrite the coordinates
@@ -148,13 +129,28 @@ screen = pygame.display.set_mode((windowWidth, windowHeight))
 map_surface = renderMap()
 
 running = True
+angle = 0
 while running:
+    angle += 0.2
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+    robot = mapping.Robot(104,115, 5, 5, angle)
+    testPoint = mapping.calculateLocalCoords(robot, 20, 50)
+    rotated = mapping.localToWorldCoords(robot, testPoint)
+    normal = mapping.calculateLocalCoords(robot, 20, 0)
+    rotatedNormal = mapping.localToWorldCoords(robot, normal)
+    start = worldToScreenCoords(robot.x, robot.y)
+    end = worldToScreenCoords(*rotated)
+    normalEnd= worldToScreenCoords(*rotatedNormal)
 
+    surface = pygame.Surface((windowWidth, windowHeight))
+    surface.fill((255, 255, 255))
+    pygame.draw.line(surface, "red", start, normalEnd, width=3)
+    pygame.draw.line(surface, "green", start, end, width=3)
     screen.fill((255, 255, 255))
-    screen.blit(map_surface, (0, 0))
+    screen.blit(surface, (0, 0))
+    
     pygame.display.flip()
 
 pygame.quit()
