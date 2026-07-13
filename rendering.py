@@ -120,21 +120,35 @@ def renderMap():
         startPos = worldToScreenCoords(*start)
         endPos = worldToScreenCoords(*end)
         pygame.draw.line(surface, colour, startPos, endPos, width=3)
+        
+
     return surface
+
+def controller(object):
+    
+    return object
 
 pygame.init()
 print(windowWidth)
 print(windowHeight)
 screen = pygame.display.set_mode((windowWidth, windowHeight))
-map_surface = renderMap()
-
+angle = 0   
 running = True
-angle = 0
 while running:
-    angle += 0.2
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+    if angle > -360:
+        angle -= 0.2
+    else:
+        angle = 0
+    
+    
+    
+    map_surface = renderMap()
+    surface = pygame.Surface((windowWidth, windowHeight), pygame.SRCALPHA)
+
     robot = mapping.Robot(104,115, 5, 5, angle)
     testPoint = mapping.calculateLocalCoords(20, 50)
     rotated = mapping.localToWorldCoords(robot, testPoint)
@@ -143,22 +157,15 @@ while running:
     start = worldToScreenCoords(robot.x, robot.y)
     end = worldToScreenCoords(*rotated)
     normalEnd= worldToScreenCoords(*rotatedNormal)
-
-    surface = pygame.Surface((windowWidth, windowHeight))
-    surface.fill((255, 255, 255))
-    print("NORMAL")
-    print(normal)
-    print(rotatedNormal)
-    print(normalEnd)
-    print("TARGET")
-    print(testPoint)
-    print(rotated)
-    print(end)
     pygame.draw.line(surface, "red", start, normalEnd, width=3)
     pygame.draw.line(surface, "green", start, end, width=3)
-    screen.fill((255, 255, 255))
-    screen.blit(surface, (0, 0))
     
+    
+    screen.fill((255, 255, 255))
+    map_surface.blit(surface, (0,0))
+    screen.blit(map_surface, (0, 0))
+
+
     pygame.display.flip()
 
 pygame.quit()
