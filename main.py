@@ -1,7 +1,6 @@
 import time
 import cv2
 import numpy as np
-import serial
 import cameraVision
 import serialCommunicator
 import mapping
@@ -11,6 +10,7 @@ import rendering
 cap = cameraVision.cap
 cameraWidth = cameraVision.cameraWidth
 cameraHeight = cameraVision.cameraHeight
+cameraFOV = cameraVision.cameraFOV
 
 
 #Variables related to sending goalVelocity to the motors
@@ -69,6 +69,9 @@ def main():
 
         ball = cameraVision.houghCircles(frame)
         if ball is not None:
+            biggestBall = mapping.Ball(67,"red")
+            ballCoords = biggestBall.transform.calculateLocalCoords(ball, cameraFOV, cameraWidth)
+            biggestBall.transform.updateLocation(ballCoords)
             velocityX = faceBall(ball)
             if velocityX != 0:
                 # Send motor1 positive, motor2 negative (for opposite direction)

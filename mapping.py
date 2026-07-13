@@ -64,10 +64,20 @@ class Ball():
             self.worldx = 0
             self.worldy = 0
             
-        def updateLocation(self, origin : Robot, offset_x, distance):
-            self.x = offset_x
-            self.y = distance
+        def updateLocation(self, origin : Robot, x, y):
+            self.x = x
+            self.y = y
             self.worldx, self.worldy = self.localToWorldCoords(origin)
+            
+        def calculateLocalCoords(ball, cameraFOV, cameraResolution):
+            cameraWidth, cameraHeight = cameraResolution
+            x, y, r, distance = ball
+            offset_x = x - cameraWidth/2
+            angle = (offset_x/(cameraWidth/2))*(cameraFOV/2)
+            radians = math.radians(angle)
+            localx = distance * math.cos(radians) 
+            localy = distance * math.sin(radians)
+            return (localx, localy)
             
         def localToWorldCoords(self, origin : Robot):
             targetCoords_x = self.x
@@ -84,5 +94,3 @@ class Ball():
             worldCoords = (finalCoords_x, finalCoords_y)
             
             return worldCoords
-        
-        
