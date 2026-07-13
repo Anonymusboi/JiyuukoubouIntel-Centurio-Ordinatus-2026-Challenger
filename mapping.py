@@ -1,52 +1,70 @@
 import math
 class Ball():
-    #Ball uses diameter, so only 1 size is used.
     def __init__(self, x, y, diameter, colour):
-        self.x = x
-        self.y = y
+        self.transform = self.Transform(x, y)
         self.diameter = diameter
         self.colour = colour
         self.collected = False
         
     def markCollected(self):
         self.collected = True
+    class Transform:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+            
+        #literally just to make code cleaner, absolutely zero use
+        def updateLocation(self, x, y):
+            self.x = x
+            self.y = y
         
 class Robot():
     #heading of 0 degrees will be FULL NORTH ^
     def __init__(self, coordinates, width, height, heading):
-        self.transform = self.Transform(coordinates, width, height)
-        #HEADING IS IN ANGLES, NOT RADIANS YET
-        self.headingD = heading
-        self.headingR = math.radians(heading)
+        self.transform = self.Transform(coordinates, width, height, heading)
 
     class Transform():
-        def __init__(self, coordinates, width, height):
+        def __init__(self, coordinates, width, height, heading):
             self.x, self.y = coordinates
             self.width = width
             self.height = height
+            self.headingD = heading
+            self.headingR = math.radians(heading)
             #COORDINATES FOR MAKING THE BOX
-            self.topLeft = (self.x - width/2, self.y + height/2)
-            self.topRight = (self.x + width/2, self.y + height/2)
-            self.bottomRight = (self.x + width/2, self.y - height/2)
-            self.bottomLeft = (self.x - width/2, self.y - height/2)
+            self.__topLeft = (self.x - width/2, self.y + height/2)
+            self.__topRight = (self.x + width/2, self.y + height/2)
+            self.__bottomRight = (self.x + width/2, self.y - height/2)
+            self.__bottomLeft = (self.x - width/2, self.y - height/2)
 
-            self.boxCoords = (self.topLeft, self.topRight, self.bottomRight, self.bottomLeft)
+            self.__localBoxCoords = [((self.__topLeft), (self.__topRight)), 
+                                    ((self.__topRight), (self.__bottomRight)),
+                                    ((self.__bottomRight), (self.__bottomLeft)),
+                                    ((self.__bottomLeft), (self.__topLeft))]
+            
+            self.worldBoxCoords = self.__localBoxCoords
             
         def rotate(self, angle):
-            finalCoords = []
-            for x, y in self.boxCoords:
-                x -= self.x
-                y -= self.y
-                rotatedCoords_x = x*math.cos(angle) - y*math.sin(angle) + self.x
-                rotatedCoords_y = x*math.sin(angle) + y*math.cos(angle) + self.y
-                finalCoords.append((rotatedCoords_x, rotatedCoords_y))
-        
+            radians = math.radians(angle)
+            self.headingD += angle
+            self.headingR += radians
             
-            self.boxCoords = [((finalCoords[0]), (finalCoords[1])), 
-                              ((finalCoords[1]),(finalCoords[2])), 
-                              ((finalCoords[2]),(finalCoords[3])), 
-                              ((finalCoords[3]),(finalCoords[0]))]
-            return self.boxCoords
+            newCoords = []
+            
+            for coord1, coord2 in self.worldBoxCoords:
+                x1, y1 = coord1
+                x1 -= self.x
+                y1 -= self.y
+                rotatedCoords_x1 = x1*math.cos(radians) - y1*math.sin(radians) + self.x
+                rotatedCoords_y1 = x1*math.sin(radians) + y1*math.cos(radians) + self.y
+                x2, y2 = coord2
+                x2 -= self.x
+                y2 -= self.y
+                rotatedCoords_x2 = x2*math.cos(radians) - y2*math.sin(radians) + self.x
+                rotatedCoords_y2 = x2*math.sin(radians) + y2*math.cos(radians) + self.y
+                newCoords.append(((rotatedCoords_x1, rotatedCoords_y1), (rotatedCoords_x2, rotatedCoords_y2)))
+            
+            self.worldBoxCoords = newCoords
+            return newCoords
         
 def calculateLocalCoords(distance, offset_x):
     targetCoords = (offset_x, distance)
@@ -56,8 +74,8 @@ def localToWorldCoords(origin : Robot, target):
     targetCoords_x, targetCoords_y = target
     
     #rotation translation
-    rotatedCoords_x = targetCoords_x*math.cos(origin.headingR) - targetCoords_y*math.sin(origin.headingR)
-    rotatedCoords_y = targetCoords_x*math.sin(origin.headingR) + targetCoords_y*math.cos(origin.headingR)
+    rotatedCoords_x = targetCoords_x*math.cos(origin.transform.headingR) - targetCoords_y*math.sin(origin.transform.headingR)
+    rotatedCoords_y = targetCoords_x*math.sin(origin.transform.headingR) + targetCoords_y*math.cos(origin.transform.headingR)
     
     #displacement translation
     finalCoords_x = rotatedCoords_x + origin.transform.x

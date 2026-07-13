@@ -128,11 +128,12 @@ def controller(object):
     
     return object
 
+robot = mapping.Robot((104,115), 5, 5, 0)
 pygame.init()
 print(windowWidth)
 print(windowHeight)
 screen = pygame.display.set_mode((windowWidth, windowHeight))
-angle = 0   
+angle = -500
 running = True
 while running:
     
@@ -149,19 +150,20 @@ while running:
     map_surface = renderMap()
     surface = pygame.Surface((windowWidth, windowHeight), pygame.SRCALPHA)
 
-    robot = mapping.Robot((104,115), 5, 5, angle)
+
     testPoint = mapping.calculateLocalCoords(20, 50)
     rotated = mapping.localToWorldCoords(robot, testPoint)
     start = worldToScreenCoords(robot.transform.x, robot.transform.y)
     end = worldToScreenCoords(*rotated)
     
-    test = robot.transform.rotate(angle)
+    test = robot.transform.rotate(0)
     print(test)
     
-    for s,e in robot.transform.boxCoords:
+    for s,e in robot.transform.worldBoxCoords:
         startPos = worldToScreenCoords(*s)
         endPos = worldToScreenCoords(*e)
         pygame.draw.line(surface, "black", startPos, endPos, width=2)
+    
     
     pygame.draw.line(surface, "green", start, end, width=3)
     
