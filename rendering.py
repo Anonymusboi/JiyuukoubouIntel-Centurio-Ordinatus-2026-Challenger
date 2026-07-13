@@ -140,7 +140,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
     if angle > -360:
-        angle -= 0.2
+        angle -= 0.02
     else:
         angle = 0
     
@@ -149,15 +149,20 @@ while running:
     map_surface = renderMap()
     surface = pygame.Surface((windowWidth, windowHeight), pygame.SRCALPHA)
 
-    robot = mapping.Robot(104,115, 5, 5, angle)
+    robot = mapping.Robot((104,115), 5, 5, angle)
     testPoint = mapping.calculateLocalCoords(20, 50)
     rotated = mapping.localToWorldCoords(robot, testPoint)
-    normal = mapping.calculateLocalCoords(20, 0)
-    rotatedNormal = mapping.localToWorldCoords(robot, normal)
-    start = worldToScreenCoords(robot.x, robot.y)
+    start = worldToScreenCoords(robot.transform.x, robot.transform.y)
     end = worldToScreenCoords(*rotated)
-    normalEnd= worldToScreenCoords(*rotatedNormal)
-    pygame.draw.line(surface, "red", start, normalEnd, width=3)
+    
+    test = robot.transform.rotate(angle)
+    print(test)
+    
+    for s,e in robot.transform.boxCoords:
+        startPos = worldToScreenCoords(*s)
+        endPos = worldToScreenCoords(*e)
+        pygame.draw.line(surface, "black", startPos, endPos, width=2)
+    
     pygame.draw.line(surface, "green", start, end, width=3)
     
     
