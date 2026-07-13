@@ -123,31 +123,39 @@ def renderMap():
 
     return surface
 
+def renderBall(surface, ball):
+    x = ball.transform.x
+    y = ball.transform.y
+    diameter = ball.diameter
+    colour = ball.colour
+    pygame.draw.circle(surface, colour, (x, y), diameter/2, width=2)
+    
+def renderRobot(surface, robot):
+    x = robot.transform.x
+    y = robot.transform.y
+    for start, end in robot.transform.worldBoxCoords:
+        startPos = worldToScreenCoords(*start)
+        endPos = worldToScreenCoords(*end)
+        pygame.draw.line(surface, "black", startPos, endPos, width=3)
+    
 def init():
     pygame.init()
     print("Rendering window at " + str(windowWidth) + "x" + str(windowHeight))
     screen = pygame.display.set_mode((windowWidth, windowHeight))
     return screen
 
-def renderBall(surface, ball):
-    x = ball.transform.x
-    y = ball.transform.y
-    diameter = ball.diameter
-    colour = ball.colour
-    pygame.draw.circle(surface, colour, x, y, diameter/2, width=2)
-    
-def renderRobot(surface, robot):
-    x = robot.transform.x
-    y = robot.transform.y
-    
-    
+def objectInit():
+    surface = pygame.Surface((windowWidth, windowHeight), pygame.SRCALPHA)
+    surface.fill((255, 255, 255))
+    return surface
 
-def renderer(screen):
+def renderer(screen, surface):
     if screen is None:
         print("YOU FORGOT TO INITIALISE")
         return None
     
     map_surface = renderMap()
+    map_surface.blit(surface, (0, 0))
     
     screen.fill((255, 255, 255))
     screen.blit(map_surface, (0, 0))

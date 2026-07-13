@@ -60,9 +60,11 @@ def main():
     else:
         print("Skipping Arduino init.")
 
-    screen = rendering.init()
+
     robot = mapping.Robot((105, 155), 5, 5, 0)
     while True:
+        screen = rendering.init()
+        surface = rendering.objectInit()
         ret, frame = cap.read()
         if not ret:
             print("Failed to read camera frame")
@@ -83,10 +85,12 @@ def main():
                 velocityX = approachBall(ball)
                 if velocityX != 0:
                     serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
+            rendering.renderBall(surface, biggestBall)
+            rendering.renderRobot(surface, robot)
+            rendering.renderer(screen, surface)
 
         cv2.imshow("FaceBall", frame)
-        rendering.renderMap
-        rendering.renderer(screen)
+
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
