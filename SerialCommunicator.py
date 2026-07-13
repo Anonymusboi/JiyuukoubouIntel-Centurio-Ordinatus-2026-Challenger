@@ -102,7 +102,7 @@ def packageCommands(v1, v2, MAX_VALUE):
     return bytes([PACKET_HEADER_0, PACKET_HEADER_1] + payload + [checksum])
 
 #do.... do i need to explain this part?
-def sendCommand(ser, motor1, motor2, MAX_VALUE, moveMode):
+def sendCommand(ser, motor1 : float, motor2 : float, MAX_VALUE, moveMode):
     match moveMode.upper():
         case "R":
             pass

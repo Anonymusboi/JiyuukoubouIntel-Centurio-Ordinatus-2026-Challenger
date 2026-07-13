@@ -1,23 +1,4 @@
 import math
-class Ball():
-    def __init__(self, x, y, diameter, colour):
-        self.transform = self.Transform(x, y)
-        self.diameter = diameter
-        self.colour = colour
-        self.collected = False
-        
-    def markCollected(self):
-        self.collected = True
-    class Transform:
-        def __init__(self, x, y):
-            self.x = x
-            self.y = y
-            
-        #literally just to make code cleaner, absolutely zero use
-        def updateLocation(self, x, y):
-            self.x = x
-            self.y = y
-        
 class Robot():
     #heading of 0 degrees will be FULL NORTH ^
     def __init__(self, coordinates, width, height, heading):
@@ -66,21 +47,42 @@ class Robot():
             self.worldBoxCoords = newCoords
             return newCoords
         
-def calculateLocalCoords(distance, offset_x):
-    targetCoords = (offset_x, distance)
-    return targetCoords
-
-def localToWorldCoords(origin : Robot, target):
-    targetCoords_x, targetCoords_y = target
-    
-    #rotation translation
-    rotatedCoords_x = targetCoords_x*math.cos(origin.transform.headingR) - targetCoords_y*math.sin(origin.transform.headingR)
-    rotatedCoords_y = targetCoords_x*math.sin(origin.transform.headingR) + targetCoords_y*math.cos(origin.transform.headingR)
-    
-    #displacement translation
-    finalCoords_x = rotatedCoords_x + origin.transform.x
-    finalCoords_y = rotatedCoords_y + origin.transform.y
-    
-    worldCoords = (finalCoords_x, finalCoords_y)
-    
-    return worldCoords
+        
+class Ball():
+    def __init__(self, diameter, colour):
+        self.transform = self.Transform()
+        self.diameter = diameter
+        self.colour = colour
+        self.collected = False
+        
+    def markCollected(self):
+        self.collected = True
+    class Transform:
+        def __init__(self):
+            self.localx = 0
+            self.localy = 0
+            self.worldx = 0
+            self.worldy = 0
+            
+        def updateLocation(self, origin : Robot, offset_x, distance):
+            self.x = offset_x
+            self.y = distance
+            self.worldx, self.worldy = self.localToWorldCoords(origin)
+            
+        def localToWorldCoords(self, origin : Robot):
+            targetCoords_x = self.x
+            targetCoords_y = self.y
+            
+            #rotation translation
+            rotatedCoords_x = targetCoords_x*math.cos(origin.transform.headingR) - targetCoords_y*math.sin(origin.transform.headingR)
+            rotatedCoords_y = targetCoords_x*math.sin(origin.transform.headingR) + targetCoords_y*math.cos(origin.transform.headingR)
+            
+            #displacement translation
+            finalCoords_x = rotatedCoords_x + origin.transform.x
+            finalCoords_y = rotatedCoords_y + origin.transform.y
+            
+            worldCoords = (finalCoords_x, finalCoords_y)
+            
+            return worldCoords
+        
+        

@@ -12,7 +12,7 @@ margin =  28
 windowWidth = 800
 scale = (windowWidth - margin*2)/arenaWidth
 windowHeight = int(scale*arenaHeight + margin*2 + 1)
-
+screen = None
 
 walls = [
     #Left walls
@@ -120,59 +120,24 @@ def renderMap():
         startPos = worldToScreenCoords(*start)
         endPos = worldToScreenCoords(*end)
         pygame.draw.line(surface, colour, startPos, endPos, width=3)
-        
 
     return surface
 
-def controller(object):
-    
-    return object
+def init():
+    pygame.init()
+    print("Rendering window at " + str(windowWidth) + "x" + str(windowHeight))
+    screen = pygame.display.set_mode((windowWidth, windowHeight))
+    return screen
 
-robot = mapping.Robot((104,115), 5, 5, 0)
-pygame.init()
-print(windowWidth)
-print(windowHeight)
-screen = pygame.display.set_mode((windowWidth, windowHeight))
-angle = -500
-running = True
-while running:
-    
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    if angle > -360:
-        angle -= 0.02
-    else:
-        angle = 0
-    
-    
+def renderer(screen):
+    if screen is None:
+        print("YOU FORGOT TO INITIALISE")
+        return None
     
     map_surface = renderMap()
-    surface = pygame.Surface((windowWidth, windowHeight), pygame.SRCALPHA)
-
-
-    testPoint = mapping.calculateLocalCoords(20, 50)
-    rotated = mapping.localToWorldCoords(robot, testPoint)
-    start = worldToScreenCoords(robot.transform.x, robot.transform.y)
-    end = worldToScreenCoords(*rotated)
-    
-    test = robot.transform.rotate(0)
-    print(test)
-    
-    for s,e in robot.transform.worldBoxCoords:
-        startPos = worldToScreenCoords(*s)
-        endPos = worldToScreenCoords(*e)
-        pygame.draw.line(surface, "black", startPos, endPos, width=2)
-    
-    
-    pygame.draw.line(surface, "green", start, end, width=3)
-    
     
     screen.fill((255, 255, 255))
-    map_surface.blit(surface, (0,0))
     screen.blit(map_surface, (0, 0))
-
-
+    
     pygame.display.flip()
 
-pygame.quit()

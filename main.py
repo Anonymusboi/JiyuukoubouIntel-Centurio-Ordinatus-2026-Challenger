@@ -4,6 +4,8 @@ import numpy as np
 import serial
 import cameraVision
 import serialCommunicator
+import mapping
+import rendering
 
 #Camera Values
 cap = cameraVision.cap
@@ -38,7 +40,7 @@ def faceBall(ball):
     offset_x = center_x - x
     velocity_x = offset_x * -RVELOCITY_SCALE #negative velocity scale since the motors are reversed?
 
-    return (velocity_x)
+    return float(velocity_x)
 
 def main():
     ser = serialCommunicator.initSerialPort()
@@ -58,6 +60,7 @@ def main():
     else:
         print("Skipping Arduino init.")
 
+    screen = rendering.init()
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -73,11 +76,12 @@ def main():
             else:
                 serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
                 #time.sleep(3) #delay 3 seconds to confirm ball is in middle
-                velocityX = approachBall
+                velocityX = approachBall(ball)
                 if velocityX != 0:
                     serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
 
         cv2.imshow("FaceBall", frame)
+        rendering.renderer(screen)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
