@@ -61,6 +61,7 @@ def main():
         print("Skipping Arduino init.")
 
     screen = rendering.init()
+    robot = mapping.Robot((105, 155), 5, 5, 0)
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -70,8 +71,8 @@ def main():
         ball = cameraVision.houghCircles(frame)
         if ball is not None:
             biggestBall = mapping.Ball(67,"red")
-            ballCoords = biggestBall.transform.calculateLocalCoords(ball, cameraFOV, cameraWidth)
-            biggestBall.transform.updateLocation(ballCoords)
+            ballCoords = biggestBall.transform.calculateLocalCoords(*ball, cameraFOV, (cameraWidth,cameraHeight))
+            biggestBall.transform.updateLocation(robot, *ballCoords)
             velocityX = faceBall(ball)
             if velocityX != 0:
                 # Send motor1 positive, motor2 negative (for opposite direction)
@@ -84,6 +85,7 @@ def main():
                     serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
 
         cv2.imshow("FaceBall", frame)
+        rendering.renderMap
         rendering.renderer(screen)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):

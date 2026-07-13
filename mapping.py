@@ -69,9 +69,8 @@ class Ball():
             self.y = y
             self.worldx, self.worldy = self.localToWorldCoords(origin)
             
-        def calculateLocalCoords(ball, cameraFOV, cameraResolution):
+        def calculateLocalCoords(self,x,y,r,distance, cameraFOV, cameraResolution):
             cameraWidth, cameraHeight = cameraResolution
-            x, y, r, distance = ball
             offset_x = x - cameraWidth/2
             angle = (offset_x/(cameraWidth/2))*(cameraFOV/2)
             radians = math.radians(angle)

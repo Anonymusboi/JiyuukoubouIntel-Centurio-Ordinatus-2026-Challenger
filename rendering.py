@@ -129,6 +129,19 @@ def init():
     screen = pygame.display.set_mode((windowWidth, windowHeight))
     return screen
 
+def renderBall(surface, ball):
+    x = ball.transform.x
+    y = ball.transform.y
+    diameter = ball.diameter
+    colour = ball.colour
+    pygame.draw.circle(surface, colour, x, y, diameter/2, width=2)
+    
+def renderRobot(surface, robot):
+    x = robot.transform.x
+    y = robot.transform.y
+    
+    
+
 def renderer(screen):
     if screen is None:
         print("YOU FORGOT TO INITIALISE")

@@ -15,7 +15,7 @@ import cv2
 import numpy as np
 
 #init camera
-cap = cv2.VideoCapture(1, cv2.CAP_DSHOW) #use webcam
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW) #use webcam
 if not cap.isOpened(): #if aint got webcam, use laptop cam
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
