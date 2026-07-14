@@ -64,12 +64,8 @@ def main():
         print("Skipping Arduino init.")
 
 
-<<<<<<< HEAD
-    robot = mapping.Robot((105, 155), 5, 5, 0)
-=======
     #ACTUAL LOGIC SECTION
     screen = rendering.init()
->>>>>>> renderer-rollback
     while True:
         screen = rendering.init()
         surface = rendering.objectInit()
@@ -77,15 +73,6 @@ def main():
         if not ret:
             print("Failed to read camera frame")
             break
-<<<<<<< HEAD
-
-        ball = cameraVision.houghCircles(frame)
-        if ball is not None:
-            biggestBall = mapping.Ball(67,"red")
-            ballCoords = biggestBall.transform.calculateLocalCoords(*ball, cameraFOV, (cameraWidth,cameraHeight))
-            biggestBall.transform.updateLocation(robot, *ballCoords)
-            velocityX = faceBall(ball)
-=======
         
         
         #OBTAIN BALL INFORMATION
@@ -111,7 +98,6 @@ def main():
         
         if targetBall is not None:
             velocityX = faceBall(targetBall)
->>>>>>> renderer-rollback
             if velocityX != 0:
                 # Send motor1 positive, motor2 negative (for opposite direction)
                 serialCommunicator.sendCommand(ser, velocityX/2, velocityX/2, MAX_VELOCITY, "R")
@@ -122,21 +108,12 @@ def main():
                 velocityX = approachBall(targetBall)
                 if velocityX != 0:
                     serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
-<<<<<<< HEAD
-            rendering.renderBall(surface, biggestBall)
-            rendering.renderRobot(surface, robot)
-            rendering.renderer(screen, surface)
-
-        cv2.imshow("FaceBall", frame)
-
-=======
                 else:
                     serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
         else:
             serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
 
         cv2.imshow("FaceBall", frame)
->>>>>>> renderer-rollback
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

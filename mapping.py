@@ -69,25 +69,6 @@ class Ball():
             self.worldx = 0
             self.worldy = 0
             
-<<<<<<< HEAD
-        def updateLocation(self, origin : Robot, x, y):
-            self.x = x
-            self.y = y
-            self.worldx, self.worldy = self.localToWorldCoords(origin)
-            
-        def calculateLocalCoords(self,x,y,r,distance, cameraFOV, cameraResolution):
-            cameraWidth, cameraHeight = cameraResolution
-            offset_x = x - cameraWidth/2
-            angle = (offset_x/(cameraWidth/2))*(cameraFOV/2)
-            radians = math.radians(angle)
-            localx = distance * math.cos(radians) 
-            localy = distance * math.sin(radians)
-            return (localx, localy)
-            
-        def localToWorldCoords(self, origin : Robot):
-            targetCoords_x = self.x
-            targetCoords_y = self.y
-=======
         def updateLocal(self, offset_x, distance):
             viewAngle = (offset_x/(cameraWidth/2)) * (cameraFOV/2)
             viewRadians = math.radians(viewAngle)
@@ -98,7 +79,6 @@ class Ball():
         def updateWorldCoords(self, origin : Robot):
             targetCoords_x = self.localx
             targetCoords_y = self.localy
->>>>>>> renderer-rollback
             
             #rotation translation
             rotatedCoords_x = targetCoords_x*math.cos(origin.transform.headingR) - targetCoords_y*math.sin(origin.transform.headingR)
@@ -110,9 +90,6 @@ class Ball():
             
             worldCoords = (finalCoords_x, finalCoords_y)
             
-<<<<<<< HEAD
-            return worldCoords
-=======
             self.worldx = finalCoords_x
             self.worldy = finalCoords_y
             
@@ -126,4 +103,3 @@ def createBall(ball : RawBall, diameter):
     digitalBall = Ball(diameter, colour)
     digitalBall.transform.updateLocal(offset_x, distance)
     return digitalBall
->>>>>>> renderer-rollback

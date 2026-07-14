@@ -25,11 +25,7 @@ if not cap.isOpened(): #if aint got webcam, use laptop cam
 #aspect ratio and dimensions
 cameraWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1280)
 cameraHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 720)
-<<<<<<< HEAD
-cameraFOV = 30 #ADJUST ACCORDING TO CAMERA MODEL
-=======
 cameraFOV = 55
->>>>>>> renderer-rollback
 
 # Ball and camera detection calibration values
 ballDiameter = 66 # Diameter of the ball in millimeters
