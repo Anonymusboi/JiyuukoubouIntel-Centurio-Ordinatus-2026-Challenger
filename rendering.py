@@ -123,9 +123,35 @@ def renderMap():
 
     return surface
 
-def renderBalls(balls : list[Ball]):
+def renderBalls(surface, balls : list[Ball]):
     for ball in balls:
-        x = ball.transform.x
+        x,y = worldToScreenCoords(ball.transform.worldx, ball.transform.worldy)
+        r = ball.diameter/10
+        colour = ball.colour
+        center = pygame.math.Vector2(x,y)
+        pygame.draw.circle(surface, colour, center, r, width=1)
+    return surface
+
+def renderTargetBalls(surface, ball : Ball):
+    x,y = worldToScreenCoords(ball.transform.worldx, ball.transform.worldy)
+    r = ball.diameter/10
+    colour = ball.colour
+    center = pygame.math.Vector2(x,y)
+    margin = 3
+    rectLeft = int(x - r - margin)
+    rectTop = int(y - r - margin)
+    rectSize = int(2 * r + 2*margin)
+    rectPoints = (rectLeft, rectTop, rectSize, rectSize)
+    pygame.draw.circle(surface, colour, center, r, width=1)
+    pygame.draw.rect(surface, "green", rectPoints, width=2) 
+    return surface
+
+def renderRobot(surface, robot : Robot):
+    for start, end in robot.transform.worldBoxCoords:
+        startPos = worldToScreenCoords(*start)
+        endPos = worldToScreenCoords(*end)
+        pygame.draw.line(surface, "black", startPos, endPos, width=2)
+    return surface
 
 def init():
     pygame.init()
@@ -133,24 +159,31 @@ def init():
     screen = pygame.display.set_mode((windowWidth, windowHeight))
     return screen
 
-def renderer(screen):
+def render(screen, balls : list[Ball], targetBall : Ball, robot : Robot):
     if screen is None:
         print("YOU FORGOT TO INITIALISE")
         return None
     
     map_surface = renderMap()
+    object_surface = pygame.Surface((windowWidth, windowHeight), pygame.SRCALPHA)
+    object_surface = renderBalls(object_surface, balls)
+    object_surface = renderTargetBalls(object_surface, targetBall)
+    object_surface = renderRobot(object_surface, robot)
+    
+    map_surface.blit(object_surface, (0,0))
     
     screen.fill((255, 255, 255))
     screen.blit(map_surface, (0, 0))
     
     pygame.display.flip()
 
-screen = init()
+def debug():
+    screen = init()
 
-running = True
+    running = True
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    renderer(screen)
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        render(screen)

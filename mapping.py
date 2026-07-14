@@ -1,4 +1,9 @@
 import math
+import cameraVision
+from cameraVision import RawBall
+
+cameraWidth = cameraVision.cameraWidth
+cameraFOV = cameraVision.cameraFOV
 class Robot():
     #heading of 0 degrees will be FULL NORTH ^
     def __init__(self, coordinates, width, height, heading):
@@ -64,14 +69,16 @@ class Ball():
             self.worldx = 0
             self.worldy = 0
             
-        def updateLocation(self, origin : Robot, offset_x, distance):
-            self.x = offset_x
-            self.y = distance
-            self.worldx, self.worldy = self.localToWorldCoords(origin)
+        def updateLocal(self, offset_x, distance):
+            viewAngle = (offset_x/(cameraWidth/2)) * (cameraFOV/2)
+            viewRadians = math.radians(viewAngle)
             
-        def localToWorldCoords(self, origin : Robot):
-            targetCoords_x = self.x
-            targetCoords_y = self.y
+            self.localx = distance/10 * math.sin(viewRadians)
+            self.localy = distance/10 * math.cos(viewRadians)
+            
+        def updateWorldCoords(self, origin : Robot):
+            targetCoords_x = self.localx
+            targetCoords_y = self.localy
             
             #rotation translation
             rotatedCoords_x = targetCoords_x*math.cos(origin.transform.headingR) - targetCoords_y*math.sin(origin.transform.headingR)
@@ -83,6 +90,16 @@ class Ball():
             
             worldCoords = (finalCoords_x, finalCoords_y)
             
+            self.worldx = finalCoords_x
+            self.worldy = finalCoords_y
+            
             return worldCoords
         
-        
+def createBall(ball : RawBall, diameter):
+    if ball is None:
+        return None
+    x, y, r, distance, colour = ball.getData()
+    offset_x = x - cameraWidth / 2
+    digitalBall = Ball(diameter, colour)
+    digitalBall.transform.updateLocal(offset_x, distance)
+    return digitalBall

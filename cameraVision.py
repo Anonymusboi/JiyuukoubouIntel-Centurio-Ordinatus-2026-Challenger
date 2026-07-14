@@ -25,6 +25,7 @@ if not cap.isOpened(): #if aint got webcam, use laptop cam
 #aspect ratio and dimensions
 cameraWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1280)
 cameraHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 720)
+cameraFOV = 55
 
 # Ball and camera detection calibration values
 ballDiameter = 66 # Diameter of the ball in millimeters
@@ -32,11 +33,14 @@ focalLength = (18 * 2 * 1126) / ballDiameter
 maxDist = 2700 # Maximum distance (MM) to consider a detection valid [arena's diagonal] (if it's over, that's probably a guy)
 
 class RawBall():
-    def __init__(self, x, y, r):
+    def __init__(self, x, y, r, colour):
         self.x = x
         self.y = y
         self.r = r
         self.distance = (ballDiameter * focalLength) / (r * 2)
+        self.colour = colour
+    def getData(self):
+        return (self.x, self.y, self.r, self.distance, self.colour)
 
 
 def findBiggestCircle(circles):
@@ -63,16 +67,16 @@ def houghCircles(frame):
         cv2.HOUGH_GRADIENT,
         dp=1,
         minDist=30,
-        param1=20,
-        param2=10,
-        minRadius=1,
-        maxRadius=50,
+        param1=30,
+        param2=12,
+        minRadius=20,
+        maxRadius=130,
     )
     if circles is None:
         return None
     rawCircles = []
     for circle in circles[0]:
-        rawCircles.append(RawBall(*circle))
+        rawCircles.append(RawBall(*circle, "red"))
     return rawCircles
 
 def drawFrameInfo(frame, circles : list[RawBall], biggest : RawBall):
@@ -84,10 +88,10 @@ def drawFrameInfo(frame, circles : list[RawBall], biggest : RawBall):
 
     if circles is not None:
         for circle in circles:
-            x = int(circle.x)
-            y = int(circle.y)
-            r = int(circle.r)
-            distance = circle.distance
+            x, y, r, distance, _ = circle.getData()
+            x = int(x)
+            y = int(y)
+            r = int(r)  
             # Draw non-target circles in YELLOW
             cv2.circle(frame, (x, y), r, (0, 255, 255), 2) #Outline
             cv2.circle(frame, (x, y), 3, (0, 255, 255), 1) #Center
@@ -104,10 +108,10 @@ def drawTargetBall(frame, ball : RawBall):
     center_x = cameraWidth // 2
     cv2.line(frame, (center_x, 0), (center_x, cameraHeight), (255, 0, 0), 1)
     if ball is not None:
-        x = int(ball.x)
-        y = int(ball.y)
-        r = int(ball.r)
-        distance = ball.distance
+        x, y, r, distance, _ = ball.getData()
+        x = int(x)
+        y = int(y)
+        r = int(r)
         # Draw TARGET circle in RED with thicker outline
         cv2.circle(frame, (x, y), r, (0, 0, 255), 3) #Outline
         cv2.circle(frame, (x, y), 2, (0, 0, 255), 3) #Center
@@ -121,20 +125,34 @@ def drawTargetBall(frame, ball : RawBall):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
         cv2.putText(frame, f"Distance={distance : .2f}", (x - 40, y - r - 65),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+
+def getMask(frame):
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    lower1 = np.array([140, 100, 100])
+    upper1 = np.array([180, 255, 255])
+    lower2 = np.array([0, 100, 100])
+    upper2 = np.array([10, 255, 255])
+
+    mask1 = cv2.inRange(hsv, lower1, upper1)
+    mask2 = cv2.inRange(hsv, lower2, upper2)
+    red = cv2.medianBlur(mask1 + mask2, 5)
+
+    return red
         
-#FOR DEBUGGING PURPOSES
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        print("Failed to read camera frame")
-        break
-    circles = houghCircles(frame)
-    biggest = findBiggestCircle(circles)
-    drawFrameInfo(frame, circles, biggest)
-    cv2.imshow("cameraVision", frame)
+def debug():
+    #FOR DEBUGGING PURPOSES
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to read camera frame")
+            break
+        circles = houghCircles(frame)
+        biggest = findBiggestCircle(circles)
+        drawFrameInfo(frame, circles, biggest)
+        cv2.imshow("cameraVision", frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-cap.release()
-cv2.destroyAllWindows()
+    cap.release()
+    cv2.destroyAllWindows()

@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import serial
 import cameraVision
+from cameraVision import RawBall
 import serialCommunicator
 import mapping
 from mapping import Robot, Ball
@@ -25,16 +26,16 @@ deadzoneX = 0.05 # Deadzone for X-axis (pan) control
 #Variables related to approaching ball
 targetBallSize = 100 #How big the ball should be to be counted as "in range" in pixels
 
-def approachBall(ball):
-    x, y, r, _ = ball
+def approachBall(ball : RawBall):
+    x, y, r, _, _ = ball.getData()
     if r >= targetBallSize:
         return 0
     velocity_x = 500 * MVELOCITY_SCALE
     return(velocity_x)
 
 #computes how the motor moves based on the ball's x position in frame.
-def faceBall(ball):
-    x, y, r, _ = ball
+def faceBall(ball : RawBall):
+    x, y, r, distance, _ = ball.getData()
     center_x = cameraWidth / 2
     if abs(x - center_x) < deadzoneX * cameraWidth:
         return 0
@@ -64,6 +65,7 @@ def main():
 
 
     #ACTUAL LOGIC SECTION
+    screen = rendering.init()
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -75,6 +77,20 @@ def main():
         balls = cameraVision.houghCircles(frame)
         targetBall = cameraVision.findBiggestCircle(balls)
         
+        robot = Robot((134, 65), 5, 5, 0)
+        
+        digitalTargetBall = mapping.createBall(targetBall, 66)
+        if digitalTargetBall is not None:
+            digitalTargetBall.transform.updateWorldCoords(robot)
+        digitalBalls = []
+        for ball in balls:
+            digitalBall = mapping.createBall(ball, 66)
+            digitalBall.transform.updateWorldCoords(robot)
+            digitalBalls.append(digitalBall)
+        rendering.render(screen, digitalBalls, digitalTargetBall, robot)
+        
+        
+        cv2.imshow("mask", cameraVision.getMask(frame))
         cameraVision.drawFrameInfo(frame, balls, targetBall)
         
         if targetBall is not None:
