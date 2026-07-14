@@ -67,8 +67,6 @@ def main():
     #ACTUAL LOGIC SECTION
     screen = rendering.init()
     while True:
-        screen = rendering.init()
-        surface = rendering.objectInit()
         ret, frame = cap.read()
         if not ret:
             print("Failed to read camera frame")
