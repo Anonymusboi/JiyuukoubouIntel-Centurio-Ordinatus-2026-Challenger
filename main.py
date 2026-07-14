@@ -17,8 +17,8 @@ cameraHeight = cameraVision.cameraHeight
 
 #Variables related to sending goalVelocity to the motors
 MAX_VELOCITY = 1023 #Max size for 10-bit values, to make sure that the values we send are within the dynamixel's goalVel range.
-RVELOCITY_SCALE = 2.0 #Scale factor for converting pixel offset to motor velocity
-MVELOCITY_SCALE = 1 #
+RVELOCITY_SCALE = 1.5 #Scale factor for converting pixel offset to motor velocity FOR ROTATION
+MVELOCITY_SCALE = .4 #APPROACHING BALL
 
 # Motor control calibration values for rotation
 deadzoneX = 0.05 # Deadzone for X-axis (pan) control
@@ -83,10 +83,11 @@ def main():
         if digitalTargetBall is not None:
             digitalTargetBall.transform.updateWorldCoords(robot)
         digitalBalls = []
-        for ball in balls:
-            digitalBall = mapping.createBall(ball, 66)
-            digitalBall.transform.updateWorldCoords(robot)
-            digitalBalls.append(digitalBall)
+        if balls is not None:
+            for ball in balls:
+                digitalBall = mapping.createBall(ball, 66)
+                digitalBall.transform.updateWorldCoords(robot)
+                digitalBalls.append(digitalBall)
         rendering.render(screen, digitalBalls, digitalTargetBall, robot)
         
         
@@ -101,9 +102,14 @@ def main():
             else:
                 serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
                 #time.sleep(3) #delay 3 seconds to confirm ball is in middle
+                velocityX = 0
                 velocityX = approachBall(targetBall)
                 if velocityX != 0:
                     serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
+                else:
+                    serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
+        else:
+            serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
 
         cv2.imshow("FaceBall", frame)
 

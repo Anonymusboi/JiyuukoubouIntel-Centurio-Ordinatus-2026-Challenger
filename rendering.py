@@ -124,6 +124,8 @@ def renderMap():
     return surface
 
 def renderBalls(surface, balls : list[Ball]):
+    if balls is None:
+        return surface
     for ball in balls:
         x,y = worldToScreenCoords(ball.transform.worldx, ball.transform.worldy)
         r = ball.diameter/10
@@ -133,6 +135,8 @@ def renderBalls(surface, balls : list[Ball]):
     return surface
 
 def renderTargetBalls(surface, ball : Ball):
+    if ball is None:
+        return surface
     x,y = worldToScreenCoords(ball.transform.worldx, ball.transform.worldy)
     r = ball.diameter/10
     colour = ball.colour
