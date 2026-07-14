@@ -2,7 +2,7 @@ import math
 import pygame
 import numpy as np
 import mapping
-
+from mapping import Ball, Robot
 #30 pixel margin
 arenaWidth = 180 + 28
 arenaHeight = 180 + 50
@@ -123,6 +123,10 @@ def renderMap():
 
     return surface
 
+def renderBalls(balls : list[Ball]):
+    for ball in balls:
+        x = ball.transform.x
+
 def init():
     pygame.init()
     print("Rendering window at " + str(windowWidth) + "x" + str(windowHeight))
@@ -141,3 +145,12 @@ def renderer(screen):
     
     pygame.display.flip()
 
+screen = init()
+
+running = True
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    renderer(screen)

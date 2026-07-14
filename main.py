@@ -75,6 +75,8 @@ def main():
         balls = cameraVision.houghCircles(frame)
         targetBall = cameraVision.findBiggestCircle(balls)
         
+        cameraVision.drawFrameInfo(frame, balls, targetBall)
+        
         if targetBall is not None:
             velocityX = faceBall(targetBall)
             if velocityX != 0:
