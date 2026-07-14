@@ -59,6 +59,7 @@ def houghCircles(frame):
     )
     if circles is None:
         return None
+    return circles
     #finds the biggest circle so we can track towards it
     biggest = findBiggestCircle(circles)
     if biggest is None:

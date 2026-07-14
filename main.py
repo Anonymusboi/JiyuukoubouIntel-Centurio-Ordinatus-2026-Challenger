@@ -5,6 +5,7 @@ import serial
 import cameraVision
 import serialCommunicator
 import mapping
+from mapping import Robot, Ball
 import rendering
 
 #Camera Values
@@ -43,6 +44,7 @@ def faceBall(ball):
     return float(velocity_x)
 
 def main():
+    #ARDUINO INITIALISE
     ser = serialCommunicator.initSerialPort()
     answer = input("Enter y to init Arduino, anything else to skip: ").strip().lower()
     if answer == "y" and ser is not None:
@@ -60,28 +62,32 @@ def main():
     else:
         print("Skipping Arduino init.")
 
-    screen = rendering.init()
+
+    #ACTUAL LOGIC SECTION
     while True:
         ret, frame = cap.read()
         if not ret:
             print("Failed to read camera frame")
             break
-
-        ball = cameraVision.houghCircles(frame)
-        if ball is not None:
-            velocityX = faceBall(ball)
+        
+        
+        #OBTAIN BALL INFORMATION
+        balls = cameraVision.houghCircles(frame)
+        targetBall = cameraVision.findBiggestCircle(balls)
+        
+        if targetBall is not None:
+            velocityX = faceBall(targetBall)
             if velocityX != 0:
                 # Send motor1 positive, motor2 negative (for opposite direction)
                 serialCommunicator.sendCommand(ser, velocityX/2, velocityX/2, MAX_VELOCITY, "R")
             else:
                 serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
                 #time.sleep(3) #delay 3 seconds to confirm ball is in middle
-                velocityX = approachBall(ball)
+                velocityX = approachBall(targetBall)
                 if velocityX != 0:
                     serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
 
         cv2.imshow("FaceBall", frame)
-        rendering.renderer(screen)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
