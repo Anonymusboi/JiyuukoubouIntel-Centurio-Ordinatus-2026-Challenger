@@ -2,8 +2,10 @@ import time
 import cv2
 import numpy as np
 import cameraVision
+from cameraVision import RawBall
 import serialCommunicator
 import mapping
+from mapping import Robot, Ball
 import rendering
 
 #Camera Values
@@ -15,8 +17,8 @@ cameraFOV = cameraVision.cameraFOV
 
 #Variables related to sending goalVelocity to the motors
 MAX_VELOCITY = 1023 #Max size for 10-bit values, to make sure that the values we send are within the dynamixel's goalVel range.
-RVELOCITY_SCALE = 2.0 #Scale factor for converting pixel offset to motor velocity
-MVELOCITY_SCALE = 1 #
+RVELOCITY_SCALE = 1.5 #Scale factor for converting pixel offset to motor velocity FOR ROTATION
+MVELOCITY_SCALE = .4 #APPROACHING BALL
 
 # Motor control calibration values for rotation
 deadzoneX = 0.05 # Deadzone for X-axis (pan) control
@@ -24,16 +26,16 @@ deadzoneX = 0.05 # Deadzone for X-axis (pan) control
 #Variables related to approaching ball
 targetBallSize = 100 #How big the ball should be to be counted as "in range" in pixels
 
-def approachBall(ball):
-    x, y, r, _ = ball
+def approachBall(ball : RawBall):
+    x, y, r, _, _ = ball.getData()
     if r >= targetBallSize:
         return 0
     velocity_x = 500 * MVELOCITY_SCALE
     return(velocity_x)
 
 #computes how the motor moves based on the ball's x position in frame.
-def faceBall(ball):
-    x, y, r, _ = ball
+def faceBall(ball : RawBall):
+    x, y, r, distance, _ = ball.getData()
     center_x = cameraWidth / 2
     if abs(x - center_x) < deadzoneX * cameraWidth:
         return 0
@@ -43,6 +45,7 @@ def faceBall(ball):
     return float(velocity_x)
 
 def main():
+    #ARDUINO INITIALISE
     ser = serialCommunicator.initSerialPort()
     answer = input("Enter y to init Arduino, anything else to skip: ").strip().lower()
     if answer == "y" and ser is not None:
@@ -61,7 +64,12 @@ def main():
         print("Skipping Arduino init.")
 
 
+<<<<<<< HEAD
     robot = mapping.Robot((105, 155), 5, 5, 0)
+=======
+    #ACTUAL LOGIC SECTION
+    screen = rendering.init()
+>>>>>>> renderer-rollback
     while True:
         screen = rendering.init()
         surface = rendering.objectInit()
@@ -69,6 +77,7 @@ def main():
         if not ret:
             print("Failed to read camera frame")
             break
+<<<<<<< HEAD
 
         ball = cameraVision.houghCircles(frame)
         if ball is not None:
@@ -76,21 +85,58 @@ def main():
             ballCoords = biggestBall.transform.calculateLocalCoords(*ball, cameraFOV, (cameraWidth,cameraHeight))
             biggestBall.transform.updateLocation(robot, *ballCoords)
             velocityX = faceBall(ball)
+=======
+        
+        
+        #OBTAIN BALL INFORMATION
+        balls = cameraVision.houghCircles(frame)
+        targetBall = cameraVision.findBiggestCircle(balls)
+        
+        robot = Robot((134, 65), 5, 5, 0)
+        
+        digitalTargetBall = mapping.createBall(targetBall, 66)
+        if digitalTargetBall is not None:
+            digitalTargetBall.transform.updateWorldCoords(robot)
+        digitalBalls = []
+        if balls is not None:
+            for ball in balls:
+                digitalBall = mapping.createBall(ball, 66)
+                digitalBall.transform.updateWorldCoords(robot)
+                digitalBalls.append(digitalBall)
+        rendering.render(screen, digitalBalls, digitalTargetBall, robot)
+        
+        
+        cv2.imshow("mask", cameraVision.getMask(frame))
+        cameraVision.drawFrameInfo(frame, balls, targetBall)
+        
+        if targetBall is not None:
+            velocityX = faceBall(targetBall)
+>>>>>>> renderer-rollback
             if velocityX != 0:
                 # Send motor1 positive, motor2 negative (for opposite direction)
                 serialCommunicator.sendCommand(ser, velocityX/2, velocityX/2, MAX_VELOCITY, "R")
             else:
                 serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
                 #time.sleep(3) #delay 3 seconds to confirm ball is in middle
-                velocityX = approachBall(ball)
+                velocityX = 0
+                velocityX = approachBall(targetBall)
                 if velocityX != 0:
                     serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
+<<<<<<< HEAD
             rendering.renderBall(surface, biggestBall)
             rendering.renderRobot(surface, robot)
             rendering.renderer(screen, surface)
 
         cv2.imshow("FaceBall", frame)
 
+=======
+                else:
+                    serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
+        else:
+            serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
+
+        cv2.imshow("FaceBall", frame)
+>>>>>>> renderer-rollback
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

@@ -2,7 +2,7 @@ import math
 import pygame
 import numpy as np
 import mapping
-
+from mapping import Ball, Robot
 #30 pixel margin
 arenaWidth = 180 + 28
 arenaHeight = 180 + 50
@@ -123,6 +123,7 @@ def renderMap():
 
     return surface
 
+<<<<<<< HEAD
 def renderBall(surface, ball):
     x = ball.transform.x
     y = ball.transform.y
@@ -138,27 +139,86 @@ def renderRobot(surface, robot):
         endPos = worldToScreenCoords(*end)
         pygame.draw.line(surface, "black", startPos, endPos, width=3)
     
+=======
+def renderBalls(surface, balls : list[Ball]):
+    if balls is None:
+        return surface
+    for ball in balls:
+        x,y = worldToScreenCoords(ball.transform.worldx, ball.transform.worldy)
+        r = ball.diameter/10
+        colour = ball.colour
+        center = pygame.math.Vector2(x,y)
+        pygame.draw.circle(surface, colour, center, r, width=1)
+    return surface
+
+def renderTargetBalls(surface, ball : Ball):
+    if ball is None:
+        return surface
+    x,y = worldToScreenCoords(ball.transform.worldx, ball.transform.worldy)
+    r = ball.diameter/10
+    colour = ball.colour
+    center = pygame.math.Vector2(x,y)
+    margin = 3
+    rectLeft = int(x - r - margin)
+    rectTop = int(y - r - margin)
+    rectSize = int(2 * r + 2*margin)
+    rectPoints = (rectLeft, rectTop, rectSize, rectSize)
+    pygame.draw.circle(surface, colour, center, r, width=1)
+    pygame.draw.rect(surface, "green", rectPoints, width=2) 
+    return surface
+
+def renderRobot(surface, robot : Robot):
+    for start, end in robot.transform.worldBoxCoords:
+        startPos = worldToScreenCoords(*start)
+        endPos = worldToScreenCoords(*end)
+        pygame.draw.line(surface, "black", startPos, endPos, width=2)
+    return surface
+
+>>>>>>> renderer-rollback
 def init():
     pygame.init()
     print("Rendering window at " + str(windowWidth) + "x" + str(windowHeight))
     screen = pygame.display.set_mode((windowWidth, windowHeight))
     return screen
 
+<<<<<<< HEAD
 def objectInit():
     surface = pygame.Surface((windowWidth, windowHeight), pygame.SRCALPHA)
     surface.fill((255, 255, 255))
     return surface
 
 def renderer(screen, surface):
+=======
+def render(screen, balls : list[Ball], targetBall : Ball, robot : Robot):
+>>>>>>> renderer-rollback
     if screen is None:
         print("YOU FORGOT TO INITIALISE")
         return None
     
     map_surface = renderMap()
+<<<<<<< HEAD
     map_surface.blit(surface, (0, 0))
+=======
+    object_surface = pygame.Surface((windowWidth, windowHeight), pygame.SRCALPHA)
+    object_surface = renderBalls(object_surface, balls)
+    object_surface = renderTargetBalls(object_surface, targetBall)
+    object_surface = renderRobot(object_surface, robot)
+    
+    map_surface.blit(object_surface, (0,0))
+>>>>>>> renderer-rollback
     
     screen.fill((255, 255, 255))
     screen.blit(map_surface, (0, 0))
     
     pygame.display.flip()
 
+def debug():
+    screen = init()
+
+    running = True
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        render(screen)
