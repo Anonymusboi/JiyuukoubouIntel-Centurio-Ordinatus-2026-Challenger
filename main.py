@@ -1,13 +1,18 @@
 import time
 import cv2
-import numpy as np
 import cameraVision
 from cameraVision import RawBall
 import serialCommunicator
 import mapping
 from mapping import Robot, Ball
 import rendering
+import json
 
+#obtain pre-recorded values
+with open("Data.json", "r") as file:
+    config = json.load(file)
+    
+    
 #Camera Values
 cap = cameraVision.cap
 cameraWidth = cameraVision.cameraWidth
@@ -17,11 +22,11 @@ cameraFOV = cameraVision.cameraFOV
 
 #Variables related to sending goalVelocity to the motors
 MAX_VELOCITY = 1023 #Max size for 10-bit values, to make sure that the values we send are within the dynamixel's goalVel range.
-RVELOCITY_SCALE = 1.5 #Scale factor for converting pixel offset to motor velocity FOR ROTATION
-MVELOCITY_SCALE = .4 #APPROACHING BALL
+RVELOCITY_SCALE = config["tracking_calibration"]["turn_velocity_scale"] #Scale factor for converting pixel offset to motor velocity FOR ROTATION
+AVELOCITY_SCALE = config["tracking_calibration"]["approach_velocity_scale"] #APPROACHING BALL
 
 # Motor control calibration values for rotation
-deadzoneX = 0.05 # Deadzone for X-axis (pan) control
+deadzoneX = config["tracking_calibration"]["turn_deadzone"] # Deadzone for X-axis (pan) control
 
 #Variables related to approaching ball
 targetBallSize = 100 #How big the ball should be to be counted as "in range" in pixels
@@ -30,7 +35,7 @@ def approachBall(ball : RawBall):
     x, y, r, _, _ = ball.getData()
     if r >= targetBallSize:
         return 0
-    velocity_x = 500 * MVELOCITY_SCALE
+    velocity_x = 500 * AVELOCITY_SCALE
     return(velocity_x)
 
 #computes how the motor moves based on the ball's x position in frame.
