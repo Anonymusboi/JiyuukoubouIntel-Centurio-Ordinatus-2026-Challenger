@@ -1,8 +1,8 @@
 import math
 import pygame
 import numpy as np
-import mapping
 from mapping import Ball, Robot
+import json
 #30 pixel margin
 arenaWidth = 180 + 28
 arenaHeight = 180 + 50
@@ -13,6 +13,10 @@ windowWidth = 800
 scale = (windowWidth - margin*2)/arenaWidth
 windowHeight = int(scale*arenaHeight + margin*2 + 1)
 screen = None
+
+with open("Data.json", "r") as file:
+    config = json.load(file)
+    
 
 walls = [
     #Left walls

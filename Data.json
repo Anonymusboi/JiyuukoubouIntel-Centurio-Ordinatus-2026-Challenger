@@ -6,16 +6,18 @@
         "length_mm": 0,
         "height_mm": 0,
         "mass_grams": 0,
-        "wheel_diameter_mm": 0,
-        "track_width_mm": 0,
-        "motor_model": "idk"
+        "wheel_diameter_mm": 76.35,
+        "track_width_mm": 127.20,
+        "motor_model": "XL430-W250-T",
+        "torque": 0.28,
+        "no_load_RPM": 57
     },
     "ball": {
         "diameter": 66,
         "mass_grams": 0
     },
     "tracking_calibration": {
-        "turn_velocity_scale": 1.5,
+        "turn_velocity_scale": 0.8,
         "approach_velocity_scale": 0.4,
         "turn_deadzone": 0.05
     }

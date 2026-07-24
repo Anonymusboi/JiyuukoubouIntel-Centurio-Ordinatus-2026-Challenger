@@ -7,6 +7,7 @@ import mapping
 from mapping import Robot, Ball
 import rendering
 import json
+import math
 
 #obtain pre-recorded values
 with open("Data.json", "r") as file:
@@ -38,6 +39,15 @@ def approachBall(ball : RawBall):
     velocity_x = 500 * AVELOCITY_SCALE
     return(velocity_x)
 
+#rotating the robot?
+def calculateAngularVelocity(vel_scale):
+    vel = (vel_scale/1023)* (((config["robot"]["no_load_RPM"] * config["robot"]["wheel_diameter_mm"] * math.pi)/60))
+    angVel = (2*vel/config["robot"]["track_width_mm"])
+    print("-----------------------------")
+    print("ANGULAR VELOCITY: " + str(angVel))
+    print("-----------------------------")
+    return angVel
+    
 #computes how the motor moves based on the ball's x position in frame.
 def faceBall(ball : RawBall):
     x, y, r, distance, _ = ball.getData()
@@ -68,7 +78,8 @@ def main():
     else:
         print("Skipping Arduino init.")
 
-
+    previous_time = time.perf_counter()
+    robot = Robot((134, 65), 5, 5, 0)
     #ACTUAL LOGIC SECTION
     screen = rendering.init()
     while True:
@@ -82,7 +93,6 @@ def main():
         balls = cameraVision.houghCircles(frame)
         targetBall = cameraVision.findBiggestCircle(balls)
         
-        robot = Robot((134, 65), 5, 5, 0)
         
         digitalTargetBall = mapping.createBall(targetBall, 66)
         if digitalTargetBall is not None:
@@ -103,13 +113,20 @@ def main():
             velocityX = faceBall(targetBall)
             if velocityX != 0:
                 # Send motor1 positive, motor2 negative (for opposite direction)
-                serialCommunicator.sendCommand(ser, velocityX/2, velocityX/2, MAX_VELOCITY, "R")
+                serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "R")
+                angularVel = calculateAngularVelocity(velocityX)
+                current_time = time.perf_counter()
+                dt = current_time - previous_time
+                previous_time = current_time
+                angularVel *= dt
+                robot.transform.rotate(math.degrees(-angularVel))
             else:
                 serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
                 #time.sleep(3) #delay 3 seconds to confirm ball is in middle
                 velocityX = 0
-                velocityX = approachBall(targetBall)
+                #velocityX = approachBall(targetBall)
                 if velocityX != 0:
+                    #approachVel = calculateVelocity(velocityX)
                     serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
                 else:
                     serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
