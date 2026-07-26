@@ -52,7 +52,6 @@ class Robot():
             self.worldBoxCoords = newCoords
             return newCoords
         
-        
 class Ball():
     def __init__(self, diameter, colour):
         self.transform = self.Transform()

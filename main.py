@@ -94,9 +94,9 @@ def main():
         targetBall = cameraVision.findBiggestCircle(balls)
         
         
-        digitalTargetBall = mapping.createBall(targetBall, 66)
-        if digitalTargetBall is not None:
-            digitalTargetBall.transform.updateWorldCoords(robot)
+        if targetBall is not None:
+            digitalTargetBall = mapping.createBall(targetBall, 66)
+            
         digitalBalls = []
         if balls is not None:
             for ball in balls:
