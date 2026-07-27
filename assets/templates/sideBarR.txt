@@ -1,7 +1,7 @@
 | STATE: {state:<10}            |
 | X: {x:<4}mm          Y: {y:<4}mm |
 |                              |
-|              N         {heading:>4}°|
+|              N        {heading:>6}°|
 |              |               |
 |              |               |
 |       W------+------E        |

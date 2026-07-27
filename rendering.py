@@ -3,6 +3,43 @@ from mapping import Ball, Robot
 import datetime
 import random
 
+class TopBarInfo():
+    def __init__(self, packets=0, camera_status="҉", serial_status="҉", tracking_status="҉", mapping_status="҉", warnings=0):
+        
+        self.packets = packets
+        self.warnings = warnings
+        
+        #STATUSES
+        # † means FUNCTIONAL. 
+        # ? means WARNING. 
+        # ! means ERROR. 
+        # × means FATAL ERROR or CANNOT CONTACT
+        # ҉ means UNINITIALISED
+        self.camera_status = camera_status
+        self.serial_status = serial_status
+        self.tracking_status = tracking_status
+        self.mapping_status = mapping_status
+    
+    def updateInfo(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+                
+class RobotInfoBar():
+    def __init__(self, state="INIT", x=0, y=0, heading=0, linearVel=0, angularVel=0):
+        self.state = state
+        self.x = x
+        self.y = y
+        self.heading = heading
+        self.linearVel = linearVel
+        self.angularVel = angularVel
+        
+    def updateInfo(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            
+        
 arenaWidth = 180 + 28 #28 for the baskets
 arenaHeight = 180 + 50 #50 for the robot start position
 
@@ -17,7 +54,9 @@ sideBarHeightL = 660
 #Values related to the right side bar
 sideBarWidthR = 430
 sideBarHeightR = 660
+robotInfoData = RobotInfoBar()
 #Values related to the top bar
+topBarData = TopBarInfo()
 topBarHeight = 110
 #values related to the bottom bar
 bottomBarHeight = 200
@@ -200,13 +239,13 @@ def renderTopBar(font):
     #Variables to display
     currentTime = datetime.datetime.now().strftime('%H:%M:%S')
     fps = f"{clock.get_fps():.0f}"
-    packets = 20
-    #for status, † means FUNCTIONAL. ? means WARNING. ! means ERROR. × means FATAL ERROR or CANNOT CONTACT
-    statusCam = "?"
-    statusSer = "†"
-    statusTrack = "†"
-    statusMap = "!"
-    warnings = 0
+    
+    packets = topBarData.packets
+    statusCam = topBarData.camera_status
+    statusSer = topBarData.serial_status
+    statusTrack = topBarData.tracking_status
+    statusMap = topBarData.mapping_status
+    warnings = topBarData.warnings
     uptime = datetime.datetime.now() - startTime
 
     total_ms = int(uptime.total_seconds() * 1000)
@@ -252,12 +291,12 @@ def renderSideBarR(font):
     surface.fill("black")
     
     #Variables to put in
-    state = "HARVESTING"
-    x = 23
-    y = 240
-    heading = 113.2
-    linearVel = 0.43
-    angularVel = 2.12
+    state = robotInfoData.state
+    x = robotInfoData.x
+    y = robotInfoData.y
+    heading = robotInfoData.heading
+    linearVel = robotInfoData.linearVel
+    angularVel = robotInfoData.angularVel
     
     lineHeight = font.get_linesize()
     #LINE 1, STATE TRACKING
@@ -270,7 +309,7 @@ def renderSideBarR(font):
     surface.blit(text, textRect)
     
     #LINE 2, COORDINATE SYSTEM
-    formatted = sideBarRTemplate[1].rstrip("\r\n").format(x=x, y=y)
+    formatted = sideBarRTemplate[1].rstrip("\r\n").format(x=f"{x:.0f}", y=f"{y:.0f}")
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
     textRect.center = (sideBarWidthL//2 + 5, 15 + lineHeight)
@@ -283,7 +322,7 @@ def renderSideBarR(font):
     surface.blit(text, textRect)
     
     #LINE 4, ROBOT HEADING    
-    formatted = sideBarRTemplate[3].rstrip("\r\n").format(heading=f"{heading:.1f}")
+    formatted = sideBarRTemplate[3].rstrip("\r\n").format(heading=f"{heading:+.1f}")
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
     textRect.center = (sideBarWidthL//2 + 5, 15 + 3*lineHeight)
@@ -405,6 +444,8 @@ def renderSideBarL(font):
     
     
 def init():
+    #topBarData.updateInfo(packets=20, camera_status="?", serial_status="†", tracking_status="†", mapping_status="!", warnings=0)
+    #robotInfoData.updateInfo(state="HARVESTING", x=23, y=240, heading=113.2, linearVel=0.43, angularVel=2.12)
     pygame.init()
     font = pygame.font.Font(r"assets\fonts\RobotoMono-ExtraLight.ttf", 22)
     print("Rendering window at " + str(windowWidth) + "x" + str(windowHeight))
