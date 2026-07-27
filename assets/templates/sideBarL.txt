@@ -1,0 +1,22 @@
+|    TARGET: NOT FOUND         |
+|    COLOUR: YELLOW            |
+|  DISTANCE: 000mm             |
+|    OFFSET: +0.00°            |
+|      SIZE: 000px             |
+|                              |
+| WORLD POS: (000 , 000)       |
+| LOCAL POS: (000 , 000)       |
++---------CAMERA INFO----------+
+|     STATUS: FUNCTIONAL       |
+| RESOLUTION: 1280 x 720       |
+|        FPS: 50               |
+|      BALLS: 15 (5R  5B  5Y)  |
++----------++PRAYER++----------+
+|                              |
+|                              |
+|                              |
+|                              |
+|                              |
+|                              |
+|                              |
++------------------------------+

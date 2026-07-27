@@ -1,42 +1,49 @@
 import pygame
 from mapping import Ball, Robot
-import time
 import datetime
+import random
 
 arenaWidth = 180 + 28 #28 for the baskets
 arenaHeight = 180 + 50 #50 for the robot start position
 
 #Scale arena window (based on x value) proportional to arena,
 margin = 50
-arenaWindowHeight = 600
+arenaWindowHeight = 660
 scale = (arenaWindowHeight - margin*2)/arenaHeight
 arenaWindowWidth = int(scale*arenaWidth + margin*2 + 1)
 #Values related to the left side bar.
-sideBarWidthL = 420
+sideBarWidthL = 431
+sideBarHeightL = 660
 #Values related to the right side bar
 sideBarWidthR = 430
-robotInfoBarHeight = 420
-motorInfoBarHeight = 200
+sideBarHeightR = 660
 #Values related to the top bar
 topBarHeight = 110
 #values related to the bottom bar
 bottomBarHeight = 200
 
-windowHeight = topBarHeight + bottomBarHeight + arenaWindowHeight
+windowHeight = topBarHeight + bottomBarHeight + arenaWindowHeight 
 windowWidth = sideBarWidthL + sideBarWidthR + arenaWindowWidth
 
 screen = None
 font = None
 
 #Stuff for the info bars
-#top bar info
+#top bar info template
 startTime = datetime.datetime.now()
 with open(r"assets\templates\TopBar.txt", "r", encoding="utf-8") as template:
     topBarTemplate = template.readlines()
 clock = pygame.time.Clock()
-#robot info bar
-with open(r"assets\templates\robotInfoBar.txt", "r", encoding="utf-8") as template:
-    robotInfoBarTemplate = template.readlines()
+#right side bar info template
+with open(r"assets\templates\sideBarR.txt", "r", encoding="utf-8") as template:
+    sideBarRTemplate = template.readlines()
+#left side bar info template
+with open(r"assets\templates\sideBarL.txt", "r", encoding="utf-8") as template:
+    sideBarLTemplate = template.readlines()
+flavourtext = random.randrange(1,6)
+path = r"assets\templates\Funny flavour text\\" + str(flavourtext) + ".txt"
+with open(path, "r", encoding="utf-8") as template:
+    prayer = template.readlines()
     
 walls = [
     #Left walls
@@ -211,72 +218,72 @@ def renderTopBar(font):
     uptime_str = f"{minutes:02}:{seconds:02}:{milli:02}"
     
     lineHeight = font.get_linesize()
-    
+    AlignmentMargin = 5 #offset to align it with the side bars
     #LINE 1, THE TOP BORDER
     text = font.render(topBarTemplate[0].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (windowWidth//2,10)
+    textRect.center = (windowWidth//2 + AlignmentMargin, 10)
     surface.blit(text, textRect)
     
     #LINE 2, THE TITLE AND TIME
     formatted = topBarTemplate[1].rstrip("\r\n").format(currentTime=currentTime)
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (windowWidth//2,10 + lineHeight)
+    textRect.center = (windowWidth//2 + AlignmentMargin, 10 + lineHeight)
     surface.blit(text, textRect)
     
     #LINE 3, DIAGNOSTIC DATA
     formatted = topBarTemplate[2].rstrip("\r\n").format(fps=fps, packet=packets, camera=statusCam, serial=statusSer, tracking=statusTrack, mapping=statusMap, uptime=uptime_str, warnings=warnings)
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (windowWidth//2,10 + 2*lineHeight)
+    textRect.center = (windowWidth//2 + AlignmentMargin, 10 + 2*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 4, THE BOTTOM BORDER
     text = font.render(topBarTemplate[3].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (windowWidth//2,10 + 3*lineHeight)
+    textRect.center = (windowWidth//2 + AlignmentMargin, 10 + 3*lineHeight)
     surface.blit(text, textRect)
     
     return surface
 
 def renderSideBarR(font):
-    surface = pygame.Surface((sideBarWidthR, robotInfoBarHeight))
+    surface = pygame.Surface((sideBarWidthR, sideBarHeightR))
     surface.fill("black")
     
     #Variables to put in
     state = "HARVESTING"
     x = 23
     y = 240
-    heading = f"{113.2:.1f}"
-    linearVel = f"{0.43:+.2f}"
-    angularVel = f"{2.12:+.2f}"
+    heading = 113.2
+    linearVel = 0.43
+    angularVel = 2.12
     
     lineHeight = font.get_linesize()
     #LINE 1, STATE TRACKING
     #The states are: SEARCHING (finding balls), HUNTING (approaching singular ball),
     #HARVESTING(Collecting the ball),, FIRING (shooting the ball)
-    formatted = robotInfoBarTemplate[0].rstrip("\r\n").format(state=state)
+    formatted = sideBarRTemplate[0].rstrip("\r\n").format(state=state)
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
     textRect.center = (sideBarWidthL//2 + 5, 15)
     surface.blit(text, textRect)
     
     #LINE 2, COORDINATE SYSTEM
-    formatted = robotInfoBarTemplate[1].rstrip("\r\n").format(x=x, y=y)
+    formatted = sideBarRTemplate[1].rstrip("\r\n").format(x=x, y=y)
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
     textRect.center = (sideBarWidthL//2 + 5, 15 + lineHeight)
     surface.blit(text, textRect)
     
     #LINE 3, BORDER
-    text = font.render(robotInfoBarTemplate[2].rstrip("\r\n"), True, "white", None)
+    text = font.render(sideBarRTemplate[2].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
     textRect.center = (sideBarWidthL//2 + 5, 15 + 2*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 4, ROBOT HEADING    
-    formatted = robotInfoBarTemplate[3].rstrip("\r\n").format(heading=heading)
+    formatted = sideBarRTemplate[3].rstrip("\r\n").format(heading=f"{heading:.1f}")
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
     textRect.center = (sideBarWidthL//2 + 5, 15 + 3*lineHeight)
@@ -284,33 +291,119 @@ def renderSideBarR(font):
     
     #COMPASS IMAGE
     for i in range(4,11):
-        text = font.render(robotInfoBarTemplate[i].rstrip("\r\n"), True, "white", None)
+        text = font.render(sideBarRTemplate[i].rstrip("\r\n"), True, "white", None)
         textRect = text.get_rect()
         textRect.center = (sideBarWidthL//2 + 5, 15 + i*lineHeight)
         surface.blit(text, textRect)
         
     #LINE 12, LINEAR VEL  
-    formatted = robotInfoBarTemplate[11].rstrip("\r\n").format(linearVel=linearVel)
+    formatted = sideBarRTemplate[11].rstrip("\r\n").format(linearVel=f"{linearVel:+.2f}")
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
     textRect.center = (sideBarWidthL//2 + 5, 15 + 11*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 13, ANGULAR VEL  
-    formatted = robotInfoBarTemplate[12].rstrip("\r\n").format(angularVel=angularVel)
+    formatted = sideBarRTemplate[12].rstrip("\r\n").format(angularVel=f"{angularVel:+.2f}")
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
     textRect.center = (sideBarWidthL//2 + 5, 15 + 12*lineHeight)
     surface.blit(text, textRect)
         
     #LINE 14, BORDER
-    text = font.render(robotInfoBarTemplate[13].rstrip("\r\n"), True, "white", None)
+    text = font.render(sideBarRTemplate[13].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
     textRect.center = (sideBarWidthL//2 + 5, 15 + 13*lineHeight)
     surface.blit(text, textRect)
 
+    #MOTOR INFO
+    LTargetRPM = 0.23
+    RTargetRPM = 0.23
+    LActualRPM = 0.21
+    RActualRPM = 0.21
+    LErrorRPM = LTargetRPM - LActualRPM
+    RErrorRPM = RTargetRPM - RActualRPM
+    motorMode = "FWRD" #the 4 moves modes are FWRD, BACK, RGHT, LEFT
+    packetDelay = 23
+    
+    #LINE 15, LEFT RIGHT indicator
+    text = font.render(sideBarRTemplate[14].rstrip("\r\n"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 14*lineHeight)
+    surface.blit(text, textRect)
+    
+    #LINE 16, TARGET RPM values
+    text = font.render(sideBarRTemplate[15].rstrip("\r\n").format(LTargetRPM=f"{LTargetRPM:+.2f}", RTargetRPM=f"{RTargetRPM:+.2f}"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 15*lineHeight)
+    surface.blit(text, textRect)
+
+    #LINE 17, ACTUAL RPM values
+    text = font.render(sideBarRTemplate[16].rstrip("\r\n").format(LActualRPM=f"{LActualRPM:+.2f}", RActualRPM=f"{RActualRPM:+.2f}"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 16*lineHeight)
+    surface.blit(text, textRect)
+    
+    #LINE 18, ERROR RPM values
+    text = font.render(sideBarRTemplate[17].rstrip("\r\n").format(LErrorRPM=f"{LErrorRPM:+.2f}", RErrorRPM=f"{RErrorRPM:+.2f}"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 17*lineHeight)
+    surface.blit(text, textRect)
+    
+    #LINE 19, BLANK SPACE
+    text = font.render(sideBarRTemplate[18].rstrip("\r\n"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 18*lineHeight)
+    surface.blit(text, textRect)
+    
+    #LINE 20, MOVE MODE indicator
+    text = font.render(sideBarRTemplate[19].rstrip("\r\n").format(motorMode=motorMode), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 19*lineHeight)
+    surface.blit(text, textRect)
+    
+    #LINE 21, PACKET DELAY value
+    text = font.render(sideBarRTemplate[20].rstrip("\r\n").format(packetDelay=f"{packetDelay:.0f}"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 20*lineHeight)
+    surface.blit(text, textRect)
+    
+    #LINE 22, BORDER
+    text = font.render(sideBarRTemplate[21].rstrip("\r\n"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 21*lineHeight)
+    surface.blit(text, textRect)
+    
     return surface
 
+
+def renderSideBarL(font):
+    surface = pygame.Surface((sideBarWidthL, sideBarHeightL))
+    surface.fill("black")
+    
+    lineHeight = font.get_linesize()
+    for i in range(0, 22):
+        text = font.render(sideBarLTemplate[i].rstrip("\r\n"), True, "white", None)
+        textRect = text.get_rect()
+        textRect.center = (sideBarWidthL//2 + 5, 15 + i*lineHeight)
+        surface.blit(text, textRect)
+
+    
+    prayerSurfaceHeight = lineHeight*7
+    prayerSurfaceWidth = 22*32
+    prayerSurface = pygame.Surface((prayerSurfaceWidth, prayerSurfaceHeight), pygame.SRCALPHA)
+    prayerFont = pygame.font.Font(r"assets\fonts\RobotoMono-ExtraLight.ttf", 14)
+    prayerLineHeight = prayerFont.get_linesize()
+    for i in range(0, len(prayer)):
+        text = prayerFont.render(prayer[i].rstrip("\r\n"), True, "white", None)
+        textRect = text.get_rect()
+        textRect.center = (sideBarWidthL//2 + 5, 15 + i*prayerLineHeight)
+        prayerSurface.blit(text, textRect)
+    
+    surface.blit(prayerSurface, (0, lineHeight*14))
+    return surface
+    
+    
 def init():
     pygame.init()
     font = pygame.font.Font(r"assets\fonts\RobotoMono-ExtraLight.ttf", 22)
@@ -329,13 +422,15 @@ def render(screen, font, balls : list[Ball], targetBall : Ball, robot : Robot):
     object_surface = renderTargetBalls(object_surface, targetBall)
     object_surface = renderRobot(object_surface, robot)
     topBarSurface = renderTopBar(font)
-    robotInfoSurface = renderSideBarR(font)
+    sideBarRSurface = renderSideBarR(font)
+    sideBarLSurface = renderSideBarL(font)
     map_surface.blit(object_surface, (0,0))
     
     screen.fill((10, 23, 12))
     screen.blit(map_surface, (sideBarWidthL, topBarHeight)) #Map Layer
     screen.blit(topBarSurface, (0,0)) #Top bar layer
-    screen.blit(robotInfoSurface, (windowWidth - sideBarWidthR, topBarHeight))
+    screen.blit(sideBarRSurface, (windowWidth - sideBarWidthR, topBarHeight))
+    screen.blit(sideBarLSurface, (0, topBarHeight))
     pygame.display.flip()
 
 def debug():

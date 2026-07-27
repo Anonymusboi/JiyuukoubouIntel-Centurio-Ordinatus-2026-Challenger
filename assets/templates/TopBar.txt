@@ -1,4 +1,4 @@
-+---------------------------------------------------------------------------------------------------------+
-  CENTURIO ORDINATUS CONTROL TERMINAL v0.idk.0                                            TIME: {currentTime:>8} 
-  FPS {fps:>3} │ PACKETS {packet:>4} │ CAMERA {camera:>1} │ SERIAL {serial:>1} │ TRACKING {tracking:>1} │ MAPPING {mapping:>1} │ UPTIME {uptime:>8} │ WARNINGS {warnings:>3} 
-+--------------------------------------------------------------------------+----------ROBOT INFO----------+
++--------------------------------------------------------------------------------------------------------------+
+| CENTURIO ORDINATUS CONTROL TERMINAL v0.idk.0                                                 TIME: {currentTime:>8}  |
+| FPS {fps:>3} | PACKETS {packet:>4} | CAMERA {camera:>1} | SERIAL {serial:>1} | TRACKING {tracking:>1} | MAPPING {mapping:>1} | WARNINGS {warnings:>3}       UPTIME: {uptime:>8}  |
++---------TARGET INFO----------+------------------------------------------------+----------ROBOT INFO----------+

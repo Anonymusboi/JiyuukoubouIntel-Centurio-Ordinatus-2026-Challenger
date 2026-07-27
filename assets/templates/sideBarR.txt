@@ -1,0 +1,22 @@
+| STATE: {state:<10}            |
+| X: {x:<4}mm          Y: {y:<4}mm |
+|                              |
+|              N         {heading:>4}°|
+|              |               |
+|              |               |
+|       W------+------E        |
+|              |               |
+|              |               |
+|              S               |
+|                              |
+|  LINEAR VEL:    {linearVel:<4} m/s    |
+| ANGULAR VEL:    {angularVel:<4} rad/s  |
++----------MOTOR INFO----------+
+|               LEFT     RIGHT |
+| TARGET RPM   {LTargetRPM:<4}     {RTargetRPM:<4} |
+| ACTUAL RPM   {LActualRPM:<4}     {RActualRPM:<4} |
+|  RPM ERROR   {LErrorRPM:<4}     {RErrorRPM:<4} |
+|                              |
+|         MODE:  {motorMode:<4}          |
+| PACKET DELAY:{packetDelay:>5}ms         |
++------------------------------+
