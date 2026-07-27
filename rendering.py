@@ -394,7 +394,7 @@ def renderSideBarL(font):
     prayerSurface = pygame.Surface((prayerSurfaceWidth, prayerSurfaceHeight), pygame.SRCALPHA)
     prayerFont = pygame.font.Font(r"assets\fonts\RobotoMono-ExtraLight.ttf", 14)
     prayerLineHeight = prayerFont.get_linesize()
-    for i in range(0, len(prayer)):
+    for i in range(0, len(prayer) - 2):
         text = prayerFont.render(prayer[i].rstrip("\r\n"), True, "white", None)
         textRect = text.get_rect()
         textRect.center = (sideBarWidthL//2 + 5, 15 + i*prayerLineHeight)
