@@ -2,6 +2,8 @@ import pygame
 from mapping import Ball, Robot
 import datetime
 import random
+pygame.init()
+
 
 class TopBarInfo():
     def __init__(self, packets=0, camera_status="҉", serial_status="҉", tracking_status="҉", mapping_status="҉", warnings=0):
@@ -26,7 +28,14 @@ class TopBarInfo():
                 setattr(self, key, value)
                 
 class RobotInfoBar():
-    def __init__(self, state="INIT", x=0, y=0, heading=0, linearVel=0, angularVel=0):
+    def __init__(self, state="INITIALISING", x=0, y=0, heading=0, linearVel=0, angularVel=0):
+        #The STATES are
+        # INITIALISING (uninitialised)
+        # IDLING (intentionally made idle)
+        # SEARCHING (finding balls)
+        # HUNTING (approaching singular ball),
+        # HARVESTING(Collecting the ball)
+        # FIRING (shooting the ball)
         self.state = state
         self.x = x
         self.y = y
@@ -39,33 +48,71 @@ class RobotInfoBar():
             if hasattr(self, key):
                 setattr(self, key, value)
             
+class MotorInfoBar():
+    def __init__(self, target_RPM_L=0, target_RPM_R=0, actual_RPM_L=0, actual_RPM_R=0, motor_mode="INIT", packet_delay=0):
+        self.target_RPM_L = target_RPM_L
+        self.target_RPM_R = target_RPM_R
+        self.actual_RPM_L = actual_RPM_L
+        self.actual_RPM_R = actual_RPM_R
+        self.error_RPM_L = target_RPM_L - actual_RPM_L
+        self.error_RPM_R = target_RPM_R - actual_RPM_R
         
-arenaWidth = 180 + 28 #28 for the baskets
-arenaHeight = 180 + 50 #50 for the robot start position
+        #The MOTOR_MODES are
+        # INIT (uninitialised)
+        # FWRD
+        # BACK
+        # RGHT
+        # LEFT
+        self.motor_mode = motor_mode
+        self.packet_delay = packet_delay
+        
+    def updateInfo(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+                
+class TargetInfoBar():
+    def __init__(self, target_found=False, colour="N/A", distance=0, offset=0, size=0, world_pos=(0,0), local_pos=(0,0)):
+        self.target_found = target_found
+        if(target_found==False):
+            self.target = "NOT FOUND"
+        elif (target_found==True):
+            self.target = "FOUND"
+        #colours are RBY
+        self.colour = colour
+        self.distance = distance
+        self.offset = offset
+        self.size = size
+        self.world_pos = world_pos
+        self.local_pos = local_pos
+    
+    def updateInfo(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+        if(self.target_found==False):
+            self.target = "NOT FOUND"
+        elif (self.target_found==True):
+            self.target = "FOUND"
+            
+class CameraInfoBar():
+    def __init__(self, camera_status="INITIALISING", resolution=(0,0), fps=0, balls=(0,0,0)):
+        # CAMERA STATUSES are
+        # INITIALISING (initialising camera)
+        # FUNCTIONAL (normally working)
+        # NO SIGNAL (cannot contact camera)
+        self.camera_status = camera_status
+        self.resolution = resolution
+        self.fps = fps
+        self.balls = balls
+        self.total_balls = self.balls[0] + self.balls[1] + self.balls[2]
+        
+    def updateInfo(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+        self.total_balls = self.balls[0] + self.balls[1] + self.balls[2]
 
-#Scale arena window (based on x value) proportional to arena,
-margin = 50
-arenaWindowHeight = 660
-scale = (arenaWindowHeight - margin*2)/arenaHeight
-arenaWindowWidth = int(scale*arenaWidth + margin*2 + 1)
-#Values related to the left side bar.
-sideBarWidthL = 431
-sideBarHeightL = 660
-#Values related to the right side bar
-sideBarWidthR = 430
-sideBarHeightR = 660
-robotInfoData = RobotInfoBar()
-#Values related to the top bar
-topBarData = TopBarInfo()
-topBarHeight = 110
-#values related to the bottom bar
-bottomBarHeight = 200
-
-windowHeight = topBarHeight + bottomBarHeight + arenaWindowHeight 
-windowWidth = sideBarWidthL + sideBarWidthR + arenaWindowWidth
-
-screen = None
-font = None
 
 #Stuff for the info bars
 #top bar info template
@@ -83,7 +130,41 @@ flavourtext = random.randrange(1,6)
 path = r"assets\templates\Funny flavour text\\" + str(flavourtext) + ".txt"
 with open(path, "r", encoding="utf-8") as template:
     prayer = template.readlines()
+#bottom bar info template
+with open(r"assets\templates\BottomBar.txt", "r", encoding="utf-8") as template:
+    bottomBarTemplate = template.readlines()
     
+arenaWidth = 180 + 28 #28 for the baskets
+arenaHeight = 180 + 50 #50 for the robot start position
+
+font = pygame.font.Font(r"assets\fonts\RobotoMono-ExtraLight.ttf", 22)
+font_height = font.get_linesize()
+#Scale arena window (based on x value) proportional to arena,
+margin = 50
+arenaWindowHeight = 660
+scale = (arenaWindowHeight - margin*2)/arenaHeight
+arenaWindowWidth = int(scale*arenaWidth + margin*2 + 1)
+#Values related to the left side bar.
+sideBarWidthL = 431
+sideBarHeightL = font_height*len(sideBarLTemplate)
+targetInfoBar = TargetInfoBar()
+cameraInfoBar = CameraInfoBar()
+#Values related to the right side bar
+sideBarWidthR = 430
+sideBarHeightR = font_height*len(sideBarRTemplate)
+robotInfoData = RobotInfoBar()
+motorInfoData = MotorInfoBar()
+#Values related to the top bar
+topBarData = TopBarInfo()
+topBarHeight = font_height*len(topBarTemplate)
+#values related to the bottom bar
+bottomBarHeight = font_height*len(bottomBarTemplate)
+
+windowHeight = topBarHeight + bottomBarHeight + arenaWindowHeight 
+windowWidth = sideBarWidthL + sideBarWidthR + arenaWindowWidth
+
+screen = None
+
 walls = [
     #Left walls
     ((0,0), (0, 60)),
@@ -231,7 +312,7 @@ def renderRobot(surface, robot : Robot):
         pygame.draw.line(surface, "black", startPos, endPos, width=2)
     return surface
 
-def renderTopBar(font):
+def renderTopBar():
     #Surface initialisation
     surface = pygame.Surface((windowWidth, topBarHeight))
     surface.fill("black")
@@ -286,7 +367,7 @@ def renderTopBar(font):
     
     return surface
 
-def renderSideBarR(font):
+def renderSideBarR():
     surface = pygame.Surface((sideBarWidthR, sideBarHeightR))
     surface.fill("black")
     
@@ -300,8 +381,6 @@ def renderSideBarR(font):
     
     lineHeight = font.get_linesize()
     #LINE 1, STATE TRACKING
-    #The states are: SEARCHING (finding balls), HUNTING (approaching singular ball),
-    #HARVESTING(Collecting the ball),, FIRING (shooting the ball)
     formatted = sideBarRTemplate[0].rstrip("\r\n").format(state=state)
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
@@ -356,14 +435,14 @@ def renderSideBarR(font):
     surface.blit(text, textRect)
 
     #MOTOR INFO
-    LTargetRPM = 0.23
-    RTargetRPM = 0.23
-    LActualRPM = 0.21
-    RActualRPM = 0.21
-    LErrorRPM = LTargetRPM - LActualRPM
-    RErrorRPM = RTargetRPM - RActualRPM
-    motorMode = "FWRD" #the 4 moves modes are FWRD, BACK, RGHT, LEFT
-    packetDelay = 23
+    LTargetRPM = motorInfoData.target_RPM_L
+    RTargetRPM = motorInfoData.target_RPM_R
+    LActualRPM = motorInfoData.actual_RPM_L
+    RActualRPM = motorInfoData.actual_RPM_R
+    LErrorRPM = motorInfoData.error_RPM_L
+    RErrorRPM = motorInfoData.error_RPM_R
+    motorMode = motorInfoData.motor_mode
+    packetDelay = motorInfoData.packet_delay
     
     #LINE 15, LEFT RIGHT indicator
     text = font.render(sideBarRTemplate[14].rstrip("\r\n"), True, "white", None)
@@ -416,12 +495,108 @@ def renderSideBarR(font):
     return surface
 
 
-def renderSideBarL(font):
+def renderSideBarL():
     surface = pygame.Surface((sideBarWidthL, sideBarHeightL))
     surface.fill("black")
     
     lineHeight = font.get_linesize()
-    for i in range(0, 22):
+    target_found = targetInfoBar.target
+    ball_colour = targetInfoBar.colour
+    dist = targetInfoBar.distance
+    offset = targetInfoBar.offset
+    ball_size = targetInfoBar.size
+    ball_world_pos = targetInfoBar.world_pos
+    ball_local_pos = targetInfoBar.local_pos
+    
+    #LINE 1, TARGET FOUND?
+    text = font.render(sideBarLTemplate[0].rstrip("\r\n").format(target_found=target_found), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 )
+    surface.blit(text, textRect)
+    
+    #LINE 2, COLOUR
+    text = font.render(sideBarLTemplate[1].rstrip("\r\n").format(colour=ball_colour), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + lineHeight)
+    surface.blit(text, textRect)
+        
+    #LINE 3, DISTANCE
+    text = font.render(sideBarLTemplate[2].rstrip("\r\n").format(dist=dist), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 2*lineHeight)
+    surface.blit(text, textRect)
+            
+    #LINE 4, OFFSET
+    text = font.render(sideBarLTemplate[3].rstrip("\r\n").format(offset=f"{offset:+.2f}"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 3*lineHeight)
+    surface.blit(text, textRect)
+                
+    #LINE 5, SIZE
+    text = font.render(sideBarLTemplate[4].rstrip("\r\n").format(size=ball_size), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 4*lineHeight)
+    surface.blit(text, textRect)
+    
+    #LINE 6, EMPTY
+    text = font.render(sideBarLTemplate[5].rstrip("\r\n"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 5*lineHeight)
+    surface.blit(text, textRect)
+        
+    #LINE 7, WORLD POS
+    text = font.render(sideBarLTemplate[6].rstrip("\r\n").format(world_pos_x=ball_world_pos[0], world_pos_y=ball_world_pos[1]), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 6*lineHeight)
+    surface.blit(text, textRect)
+            
+    #LINE 8, LOCAL POS
+    text = font.render(sideBarLTemplate[7].rstrip("\r\n").format(local_pos_x=ball_local_pos[0], local_pos_y=ball_local_pos[1]), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 7*lineHeight)
+    surface.blit(text, textRect)
+    
+    
+    #CAMERA INFO BAR
+    status = cameraInfoBar.camera_status
+    resolution = cameraInfoBar.resolution
+    fps = cameraInfoBar.fps
+    total_balls = cameraInfoBar.total_balls
+    red_balls = cameraInfoBar.balls[0]
+    blue_balls = cameraInfoBar.balls[1]
+    yellow_balls = cameraInfoBar.balls[2]
+    
+    #LINE 9, BORDER
+    text = font.render(sideBarLTemplate[8].rstrip("\r\n"), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 8*lineHeight)
+    surface.blit(text, textRect)
+    
+    #LINE 10, CAMERA STATUS
+    text = font.render(sideBarLTemplate[9].rstrip("\r\n").format(status=status), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 9*lineHeight)
+    surface.blit(text, textRect)
+        
+    #LINE 11, RESOLUTION
+    text = font.render(sideBarLTemplate[10].rstrip("\r\n").format(resolution_x=resolution[0], resolution_y=resolution[1]), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 10*lineHeight)
+    surface.blit(text, textRect)
+        
+    #LINE 12, FPS
+    text = font.render(sideBarLTemplate[11].rstrip("\r\n").format(fps=fps), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 11*lineHeight)
+    surface.blit(text, textRect)
+        
+    #LINE 13, BALLS
+    text = font.render(sideBarLTemplate[12].rstrip("\r\n").format(total_balls=total_balls, red_balls=red_balls, blue_balls=blue_balls, yellow_balls=yellow_balls), True, "white", None)
+    textRect = text.get_rect()
+    textRect.center = (sideBarWidthL//2 + 5, 15 + 12*lineHeight)
+    surface.blit(text, textRect)
+    
+    for i in range(13, 22):
         text = font.render(sideBarLTemplate[i].rstrip("\r\n"), True, "white", None)
         textRect = text.get_rect()
         textRect.center = (sideBarWidthL//2 + 5, 15 + i*lineHeight)
@@ -442,17 +617,32 @@ def renderSideBarL(font):
     surface.blit(prayerSurface, (0, lineHeight*14))
     return surface
     
+def renderBottomBar():
+    #Surface initialisation
+    lineHeight = font.get_linesize()
+    test =len(bottomBarTemplate)*lineHeight
+    surface = pygame.Surface((windowWidth, len(bottomBarTemplate)*lineHeight))
+    surface.fill("black")
+    
+    
+    for i in range(0,len(bottomBarTemplate)):
+        text = font.render(bottomBarTemplate[i].rstrip("\r\n"), True, "white", None)
+        textRect = text.get_rect()
+        textRect.center = (windowWidth//2 + 5, 15 + i*lineHeight)
+        surface.blit(text, textRect)
+        
+    return surface
+    
+    
+    
+    
     
 def init():
-    #topBarData.updateInfo(packets=20, camera_status="?", serial_status="†", tracking_status="†", mapping_status="!", warnings=0)
-    #robotInfoData.updateInfo(state="HARVESTING", x=23, y=240, heading=113.2, linearVel=0.43, angularVel=2.12)
-    pygame.init()
-    font = pygame.font.Font(r"assets\fonts\RobotoMono-ExtraLight.ttf", 22)
     print("Rendering window at " + str(windowWidth) + "x" + str(windowHeight))
     screen = pygame.display.set_mode((windowWidth, windowHeight))
-    return screen, font
+    return screen
 
-def render(screen, font, balls : list[Ball], targetBall : Ball, robot : Robot):
+def render(screen, balls : list[Ball], targetBall : Ball, robot : Robot):
     if screen is None:
         print("YOU FORGOT TO INITIALISE")
         return None
@@ -462,9 +652,10 @@ def render(screen, font, balls : list[Ball], targetBall : Ball, robot : Robot):
     object_surface = renderBalls(object_surface, balls)
     object_surface = renderTargetBalls(object_surface, targetBall)
     object_surface = renderRobot(object_surface, robot)
-    topBarSurface = renderTopBar(font)
-    sideBarRSurface = renderSideBarR(font)
-    sideBarLSurface = renderSideBarL(font)
+    topBarSurface = renderTopBar()
+    sideBarRSurface = renderSideBarR()
+    sideBarLSurface = renderSideBarL()
+    bottomBarSurface = renderBottomBar()
     map_surface.blit(object_surface, (0,0))
     
     screen.fill((10, 23, 12))
@@ -472,11 +663,16 @@ def render(screen, font, balls : list[Ball], targetBall : Ball, robot : Robot):
     screen.blit(topBarSurface, (0,0)) #Top bar layer
     screen.blit(sideBarRSurface, (windowWidth - sideBarWidthR, topBarHeight))
     screen.blit(sideBarLSurface, (0, topBarHeight))
+    screen.blit(bottomBarSurface, (0, topBarHeight + arenaWindowHeight))
     pygame.display.flip()
 
 def debug():
-    screen, font = init()
-
+    screen = init()
+    #topBarData.updateInfo(packets=20, camera_status="?", serial_status="†", tracking_status="†", mapping_status="!", warnings=0)
+    #robotInfoData.updateInfo(state="HARVESTING", x=23, y=240, heading=113.2, linearVel=0.43, angularVel=2.12)
+    #motorInfoData.updateInfo(target_RPM_L=0.23, target_RPM_R=0.23, actual_RPM_L=0.21, actual_RPM_R=0.21, motor_mode="FWRD", packet_delay=23)
+    #targetInfoBar.updateInfo(target_found=True, colour="YELLOW", distance=125, offset=5, size=53, world_pos=(1234,54), local_pos=(52,23))
+    #cameraInfoBar.updateInfo(camera_status="FUNCTIONAL", resolution=(1280,720), fps=54, balls=(2,5,5))
     running = True
     
     robot = Robot((134, 65), 5, 5, 0)
@@ -486,7 +682,7 @@ def debug():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        render(screen, font, None, None, robot)
+        render(screen, None, None, robot)
         clock.tick()
         
 debug()
