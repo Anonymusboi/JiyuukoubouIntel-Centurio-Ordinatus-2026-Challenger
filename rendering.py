@@ -141,16 +141,16 @@ font = pygame.font.Font(r"assets\fonts\RobotoMono-ExtraLight.ttf", 22)
 font_height = font.get_linesize()
 #Scale arena window (based on x value) proportional to arena,
 margin = 50
-arenaWindowHeight = 660
+arenaWindowHeight = font_height*len(sideBarLTemplate)
 scale = (arenaWindowHeight - margin*2)/arenaHeight
 arenaWindowWidth = int(scale*arenaWidth + margin*2 + 1)
 #Values related to the left side bar.
-sideBarWidthL = 431
+sideBarWidthL = font.size(" ")[0] * len(sideBarLTemplate[21].rstrip("\r\n")) + 10
 sideBarHeightL = font_height*len(sideBarLTemplate)
 targetInfoBar = TargetInfoBar()
 cameraInfoBar = CameraInfoBar()
 #Values related to the right side bar
-sideBarWidthR = 430
+sideBarWidthR = font.size(" ")[0] * len(sideBarRTemplate[21].rstrip("\r\n")) + 10
 sideBarHeightR = font_height*len(sideBarRTemplate)
 robotInfoData = RobotInfoBar()
 motorInfoData = MotorInfoBar()
@@ -338,7 +338,7 @@ def renderTopBar():
     uptime_str = f"{minutes:02}:{seconds:02}:{milli:02}"
     
     lineHeight = font.get_linesize()
-    AlignmentMargin = 5 #offset to align it with the side bars
+    AlignmentMargin = 0 #offset to align it with the side bars
     #LINE 1, THE TOP BORDER
     text = font.render(topBarTemplate[0].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
@@ -384,54 +384,54 @@ def renderSideBarR():
     formatted = sideBarRTemplate[0].rstrip("\r\n").format(state=state)
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15)
+    textRect.center = (sideBarWidthR//2, 15)
     surface.blit(text, textRect)
     
     #LINE 2, COORDINATE SYSTEM
     formatted = sideBarRTemplate[1].rstrip("\r\n").format(x=f"{x:.0f}", y=f"{y:.0f}")
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + lineHeight)
     surface.blit(text, textRect)
     
     #LINE 3, BORDER
     text = font.render(sideBarRTemplate[2].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 2*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 2*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 4, ROBOT HEADING    
     formatted = sideBarRTemplate[3].rstrip("\r\n").format(heading=f"{heading:+.1f}")
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 3*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 3*lineHeight)
     surface.blit(text, textRect)
     
     #COMPASS IMAGE
     for i in range(4,11):
         text = font.render(sideBarRTemplate[i].rstrip("\r\n"), True, "white", None)
         textRect = text.get_rect()
-        textRect.center = (sideBarWidthL//2 + 5, 15 + i*lineHeight)
+        textRect.center = (sideBarWidthR//2, 15 + i*lineHeight)
         surface.blit(text, textRect)
         
     #LINE 12, LINEAR VEL  
     formatted = sideBarRTemplate[11].rstrip("\r\n").format(linearVel=f"{linearVel:+.2f}")
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 11*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 11*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 13, ANGULAR VEL  
     formatted = sideBarRTemplate[12].rstrip("\r\n").format(angularVel=f"{angularVel:+.2f}")
     text = font.render(formatted, True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 12*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 12*lineHeight)
     surface.blit(text, textRect)
         
     #LINE 14, BORDER
     text = font.render(sideBarRTemplate[13].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 13*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 13*lineHeight)
     surface.blit(text, textRect)
 
     #MOTOR INFO
@@ -447,49 +447,49 @@ def renderSideBarR():
     #LINE 15, LEFT RIGHT indicator
     text = font.render(sideBarRTemplate[14].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 14*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 14*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 16, TARGET RPM values
     text = font.render(sideBarRTemplate[15].rstrip("\r\n").format(LTargetRPM=f"{LTargetRPM:+.2f}", RTargetRPM=f"{RTargetRPM:+.2f}"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 15*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 15*lineHeight)
     surface.blit(text, textRect)
 
     #LINE 17, ACTUAL RPM values
     text = font.render(sideBarRTemplate[16].rstrip("\r\n").format(LActualRPM=f"{LActualRPM:+.2f}", RActualRPM=f"{RActualRPM:+.2f}"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 16*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 16*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 18, ERROR RPM values
     text = font.render(sideBarRTemplate[17].rstrip("\r\n").format(LErrorRPM=f"{LErrorRPM:+.2f}", RErrorRPM=f"{RErrorRPM:+.2f}"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 17*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 17*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 19, BLANK SPACE
     text = font.render(sideBarRTemplate[18].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 18*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 18*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 20, MOVE MODE indicator
     text = font.render(sideBarRTemplate[19].rstrip("\r\n").format(motorMode=motorMode), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 19*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 19*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 21, PACKET DELAY value
     text = font.render(sideBarRTemplate[20].rstrip("\r\n").format(packetDelay=f"{packetDelay:.0f}"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 20*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 20*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 22, BORDER
     text = font.render(sideBarRTemplate[21].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 21*lineHeight)
+    textRect.center = (sideBarWidthR//2, 15 + 21*lineHeight)
     surface.blit(text, textRect)
     
     return surface
@@ -511,49 +511,49 @@ def renderSideBarL():
     #LINE 1, TARGET FOUND?
     text = font.render(sideBarLTemplate[0].rstrip("\r\n").format(target_found=target_found), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 )
+    textRect.center = (sideBarWidthL//2, 15 )
     surface.blit(text, textRect)
     
     #LINE 2, COLOUR
     text = font.render(sideBarLTemplate[1].rstrip("\r\n").format(colour=ball_colour), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + lineHeight)
     surface.blit(text, textRect)
         
     #LINE 3, DISTANCE
     text = font.render(sideBarLTemplate[2].rstrip("\r\n").format(dist=dist), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 2*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 2*lineHeight)
     surface.blit(text, textRect)
             
     #LINE 4, OFFSET
     text = font.render(sideBarLTemplate[3].rstrip("\r\n").format(offset=f"{offset:+.2f}"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 3*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 3*lineHeight)
     surface.blit(text, textRect)
                 
     #LINE 5, SIZE
     text = font.render(sideBarLTemplate[4].rstrip("\r\n").format(size=ball_size), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 4*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 4*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 6, EMPTY
     text = font.render(sideBarLTemplate[5].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 5*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 5*lineHeight)
     surface.blit(text, textRect)
         
     #LINE 7, WORLD POS
     text = font.render(sideBarLTemplate[6].rstrip("\r\n").format(world_pos_x=ball_world_pos[0], world_pos_y=ball_world_pos[1]), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 6*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 6*lineHeight)
     surface.blit(text, textRect)
             
     #LINE 8, LOCAL POS
     text = font.render(sideBarLTemplate[7].rstrip("\r\n").format(local_pos_x=ball_local_pos[0], local_pos_y=ball_local_pos[1]), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 7*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 7*lineHeight)
     surface.blit(text, textRect)
     
     
@@ -569,37 +569,37 @@ def renderSideBarL():
     #LINE 9, BORDER
     text = font.render(sideBarLTemplate[8].rstrip("\r\n"), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 8*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 8*lineHeight)
     surface.blit(text, textRect)
     
     #LINE 10, CAMERA STATUS
     text = font.render(sideBarLTemplate[9].rstrip("\r\n").format(status=status), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 9*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 9*lineHeight)
     surface.blit(text, textRect)
         
     #LINE 11, RESOLUTION
     text = font.render(sideBarLTemplate[10].rstrip("\r\n").format(resolution_x=resolution[0], resolution_y=resolution[1]), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 10*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 10*lineHeight)
     surface.blit(text, textRect)
         
     #LINE 12, FPS
     text = font.render(sideBarLTemplate[11].rstrip("\r\n").format(fps=fps), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 11*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 11*lineHeight)
     surface.blit(text, textRect)
         
     #LINE 13, BALLS
     text = font.render(sideBarLTemplate[12].rstrip("\r\n").format(total_balls=total_balls, red_balls=red_balls, blue_balls=blue_balls, yellow_balls=yellow_balls), True, "white", None)
     textRect = text.get_rect()
-    textRect.center = (sideBarWidthL//2 + 5, 15 + 12*lineHeight)
+    textRect.center = (sideBarWidthL//2, 15 + 12*lineHeight)
     surface.blit(text, textRect)
     
     for i in range(13, 22):
         text = font.render(sideBarLTemplate[i].rstrip("\r\n"), True, "white", None)
         textRect = text.get_rect()
-        textRect.center = (sideBarWidthL//2 + 5, 15 + i*lineHeight)
+        textRect.center = (sideBarWidthL//2, 15 + i*lineHeight)
         surface.blit(text, textRect)
 
     
@@ -611,7 +611,7 @@ def renderSideBarL():
     for i in range(0, len(prayer) - 2):
         text = prayerFont.render(prayer[i].rstrip("\r\n"), True, "white", None)
         textRect = text.get_rect()
-        textRect.center = (sideBarWidthL//2 + 5, 15 + i*prayerLineHeight)
+        textRect.center = (sideBarWidthL//2, 15 + i*prayerLineHeight)
         prayerSurface.blit(text, textRect)
     
     surface.blit(prayerSurface, (0, lineHeight*14))
@@ -620,7 +620,6 @@ def renderSideBarL():
 def renderBottomBar():
     #Surface initialisation
     lineHeight = font.get_linesize()
-    test =len(bottomBarTemplate)*lineHeight
     surface = pygame.Surface((windowWidth, len(bottomBarTemplate)*lineHeight))
     surface.fill("black")
     
@@ -628,7 +627,7 @@ def renderBottomBar():
     for i in range(0,len(bottomBarTemplate)):
         text = font.render(bottomBarTemplate[i].rstrip("\r\n"), True, "white", None)
         textRect = text.get_rect()
-        textRect.center = (windowWidth//2 + 5, 15 + i*lineHeight)
+        textRect.center = (windowWidth//2, 15 + i*lineHeight)
         surface.blit(text, textRect)
         
     return surface
@@ -685,5 +684,4 @@ def debug():
         render(screen, None, None, robot)
         clock.tick()
         
-debug()
         

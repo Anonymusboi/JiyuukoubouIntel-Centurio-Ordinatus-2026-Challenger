@@ -9,7 +9,7 @@
 +---------CAMERA INFO----------+
 |     STATUS: {status:<13}    |
 | RESOLUTION: {resolution_x:>4} x {resolution_y:<4}      |
-|        FPS: {fps:<3}              |
+| CAMERA FPS: {fps:<3}              |
 |      BALLS: {total_balls:<2} ({red_balls:<1}R  {blue_balls:<1}B  {yellow_balls:<1}Y)  |
 +----------++PRAYER++----------+
 |                              |
