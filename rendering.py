@@ -3,6 +3,9 @@ from mapping import Ball, Robot
 import datetime
 import random
 from collections import deque
+import sys
+sys.path.append(r"D:\MEGA\Clement's School stuff\Repos\markov-babbler-master")
+import babbler
 pygame.init()
 
 
@@ -120,6 +123,11 @@ class Logger:
         self.scroll_offset = 0
 
     def log(self, message):
+        
+        max_length = 109
+        currentTime = "[" + str(datetime.datetime.now().strftime('%H:%M:%S')) + "]"
+        message = currentTime + message
+        message = message[:max_length]
         
         formatted = f"{message:<109}"
         self.lines.append(formatted)
@@ -719,8 +727,9 @@ def debug():
     #motorInfoData.updateInfo(target_RPM_L=0.23, target_RPM_R=0.23, actual_RPM_L=0.21, actual_RPM_R=0.21, motor_mode="FWRD", packet_delay=23)
     #targetInfoBar.updateInfo(target_found=True, colour="YELLOW", distance=125, offset=5, size=53, world_pos=(1234,54), local_pos=(52,23))
     #cameraInfoBar.updateInfo(camera_status="FUNCTIONAL", resolution=(1280,720), fps=54, balls=(2,5,5))
+    babble = babbler.init(3)
     for i in range(0, 100):
-        logger.log("line: " + str(i))
+        logger.log("[MARKOV BABBLER]" + babbler.babble(1, babble)[0])
     running = True
     
     robot = Robot((134, 65), 5, 5, 0)
