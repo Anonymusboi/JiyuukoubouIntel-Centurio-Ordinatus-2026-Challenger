@@ -8,6 +8,8 @@ from mapping import Robot, Ball
 import rendering
 import json
 import math
+from rendering import logger as Debug
+import pygame
 
 #obtain pre-recorded values
 with open("Data.json", "r") as file:
@@ -43,9 +45,9 @@ def approachBall(ball : RawBall):
 def calculateAngularVelocity(vel_scale):
     vel = (vel_scale/1023)* (((config["robot"]["no_load_RPM"] * config["robot"]["wheel_diameter_mm"] * math.pi)/60))
     angVel = (2*vel/config["robot"]["track_width_mm"])
-    print("-----------------------------")
-    print("ANGULAR VELOCITY: " + str(angVel))
-    print("-----------------------------")
+    Debug.log("PYTHON", "-----------------------------")
+    Debug.log("PYTHON", "ANGULAR VELOCITY: " + str(angVel))
+    Debug.log("PYTHON", "-----------------------------")
     return angVel
     
 #computes how the motor moves based on the ball's x position in frame.
@@ -69,14 +71,13 @@ def main():
         while time.time() < deadline:
             line = ser.readline().decode('utf-8', errors='ignore').strip()
             if line:
-                print("[SERIAL MONITOR]", line)
+                Debug.log("SERIAL MONITOR", line)
             if line == "Setup concluded.":
                 break
         else:
-            print("Something broke during setup")
-            exit(0)
+            Debug.log("PYTHON", "Something broke during setup, maybe check the power switch?")
     else:
-        print("Skipping Arduino init.")
+        Debug.log("PYTHON", "Skipped arduino init")
 
     previous_time = time.perf_counter()
     robot = Robot((134, 65), 5, 5, 0)
@@ -85,9 +86,11 @@ def main():
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("Failed to read camera frame")
+            Debug.log("PYTHON", "Failed to read camera frame")
             break
-        
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEWHEEL:
+                Debug.scroll(event.y)  
         
         #OBTAIN BALL INFORMATION
         balls = cameraVision.houghCircles(frame)

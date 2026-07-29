@@ -6,6 +6,7 @@ from collections import deque
 import sys
 sys.path.append(r"D:\MEGA\Clement's School stuff\Repos\markov-babbler-master")
 import babbler
+import textwrap
 pygame.init()
 
 
@@ -122,15 +123,15 @@ class Logger:
         self.lines = deque(maxlen=max_history)
         self.scroll_offset = 0
 
-    def log(self, message):
+    def log(self, source, message):
         
         max_length = 109
-        currentTime = "[" + str(datetime.datetime.now().strftime('%H:%M:%S')) + "]"
-        message = currentTime + message
-        message = message[:max_length]
-        
-        formatted = f"{message:<109}"
-        self.lines.append(formatted)
+        currentTime = "[" + str(datetime.datetime.now().strftime('%H:%M:%S:%f')[:11]) + "]"
+        message = currentTime + f"[{source}] " + message
+        message = textwrap.wrap(message, width=109)
+        for line in message:
+            formatted = f"{line:<109}"
+            self.lines.append(formatted)
 
         # Remain at the bottom unless the user has scrolled upward.
         if self.scroll_offset == 0:
@@ -729,7 +730,7 @@ def debug():
     #cameraInfoBar.updateInfo(camera_status="FUNCTIONAL", resolution=(1280,720), fps=54, balls=(2,5,5))
     babble = babbler.init(3)
     for i in range(0, 100):
-        logger.log("[MARKOV BABBLER]" + babbler.babble(1, babble)[0])
+        logger.log("MARKOV BABBLER", babbler.babble(1, babble)[0])
     running = True
     
     robot = Robot((134, 65), 5, 5, 0)
@@ -741,7 +742,6 @@ def debug():
                 running = False
             if event.type == pygame.MOUSEWHEEL:
                 logger.scroll(event.y)  
-        render(screen, None, None, robot)
+        render(screen, ball, big, robot)
         clock.tick()
         
-debug()

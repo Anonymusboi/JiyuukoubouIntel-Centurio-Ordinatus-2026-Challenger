@@ -20,6 +20,7 @@ Arduinoとのシリアル通信を処理し、モーター制御を行う。
 import serial
 import numpy as np
 import time
+from rendering import logger as Debug
 
 #Variables related to sending info to serial
 SERIAL_PORT = "COM4" #Serial port duh
@@ -34,11 +35,11 @@ def initSerialPort():
         #DONT YOU FUCKING FORGET TO RESET IT OR IT DIES DIPSHIT
         ser.reset_input_buffer()
         ser.reset_output_buffer()
-        print(f"Opened serial port {SERIAL_PORT} @ {SERIAL_BAUD}")
+        Debug.log("PYTHON", f"Opened serial port {SERIAL_PORT} @ {SERIAL_BAUD}")
         return ser
     #check if serial port opened
     except Exception as exc:
-        print(f"Unable to open serial port {SERIAL_PORT}: {exc}")
+        Debug.log("PYTHON", f"{exc}")
         return None
 
 #reads serial until arduino prints out END, also a timeout to prevent infinite loop
@@ -53,14 +54,14 @@ def readSerial(ser, timeout=1.0):
             line = ser.readline().decode('utf-8', errors='ignore').strip()
         except Exception as exc:
             #somehow, the computer can't read.
-            print(f"Error reading serial: {exc}")
+            Debug.log("PYTHON", f"Error reading serial: {exc}")
             return False
         if not line:
             continue
-        print("[SERIAL MONITOR]", line)
+        Debug.log("PYTHON", "[SERIAL MONITOR]", line)
         if line == "END":
             return True
-    print("[SERIAL MONITOR] timed out waiting for END")
+    Debug.log("PYTHON", "[SERIAL MONITOR] timed out waiting for END")
     return False
 
 #this is the juicy part. Basically, it takes the values we send for both motors,
@@ -114,7 +115,7 @@ def sendCommand(ser, motor1 : float, motor2 : float, MAX_VALUE, moveMode):
         case "B":
             motor1 *= -1
         case _:
-            print("Unexpected moveMode, but proceeding anyways with default")
+            Debug.log("PYTHON", "Unexpected moveMode, but proceeding anyways with default")
     packet = packageCommands(motor1, motor2, MAX_VALUE)
     if ser is None:
         return False
