@@ -2,6 +2,7 @@ import pygame
 from mapping import Ball, Robot
 import datetime
 import random
+from collections import deque
 pygame.init()
 
 
@@ -113,7 +114,44 @@ class CameraInfoBar():
                 setattr(self, key, value)
         self.total_balls = self.balls[0] + self.balls[1] + self.balls[2]
 
+class Logger:
+    def __init__(self, max_history=1000):
+        self.lines = deque(maxlen=max_history)
+        self.scroll_offset = 0
 
+    def log(self, message):
+        
+        formatted = f"{message:<109}"
+        self.lines.append(formatted)
+
+        # Remain at the bottom unless the user has scrolled upward.
+        if self.scroll_offset == 0:
+            self.scroll_offset = 0
+
+    def scroll(self, amount):
+        max_offset = max(0, len(self.lines))
+
+        self.scroll_offset = max(
+            0,
+            min(self.scroll_offset + amount, max_offset - 6)
+        )
+        
+    def get_visible_lines(self, visible_count):
+        lines = list(self.lines)
+        
+        max_offset = max(0, len(lines) - visible_count) + 1
+        start = len(lines) - self.scroll_offset
+        end = max(0, start - visible_count)
+        
+        visible = lines[end:start][::-1]
+        if self.scroll_offset >= max_offset and max_offset > 0:
+            visible.append("[END OF HISTORY]")
+            self.scroll_offset = max_offset
+        elif len(visible) < visible_count:
+            visible.append("[END OF HISTORY]")
+        
+        return visible
+    
 #Stuff for the info bars
 #top bar info template
 startTime = datetime.datetime.now()
@@ -159,6 +197,7 @@ topBarData = TopBarInfo()
 topBarHeight = font_height*len(topBarTemplate)
 #values related to the bottom bar
 bottomBarHeight = font_height*len(bottomBarTemplate)
+logger = Logger()
 
 windowHeight = topBarHeight + bottomBarHeight + arenaWindowHeight 
 windowWidth = sideBarWidthL + sideBarWidthR + arenaWindowWidth
@@ -616,6 +655,7 @@ def renderSideBarL():
     
     surface.blit(prayerSurface, (0, lineHeight*14))
     return surface
+
     
 def renderBottomBar():
     #Surface initialisation
@@ -630,10 +670,17 @@ def renderBottomBar():
         textRect.center = (windowWidth//2, 15 + i*lineHeight)
         surface.blit(text, textRect)
         
+    visible_lines = logger.get_visible_lines(7)
+    
+    for i in range(0, len(visible_lines)):
+        text = font.render(visible_lines[i].rstrip("\r\n"), True, "white", None)
+        textRect = text.get_rect()
+        textRect.center = (windowWidth//2, ((len(bottomBarTemplate)-1)*lineHeight) - i*lineHeight)
+        surface.blit(text, textRect)
+        
     return surface
     
-    
-    
+
     
     
 def init():
@@ -672,6 +719,8 @@ def debug():
     #motorInfoData.updateInfo(target_RPM_L=0.23, target_RPM_R=0.23, actual_RPM_L=0.21, actual_RPM_R=0.21, motor_mode="FWRD", packet_delay=23)
     #targetInfoBar.updateInfo(target_found=True, colour="YELLOW", distance=125, offset=5, size=53, world_pos=(1234,54), local_pos=(52,23))
     #cameraInfoBar.updateInfo(camera_status="FUNCTIONAL", resolution=(1280,720), fps=54, balls=(2,5,5))
+    for i in range(0, 100):
+        logger.log("line: " + str(i))
     running = True
     
     robot = Robot((134, 65), 5, 5, 0)
@@ -681,7 +730,9 @@ def debug():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.MOUSEWHEEL:
+                logger.scroll(event.y)  
         render(screen, None, None, robot)
         clock.tick()
         
-        
+debug()
