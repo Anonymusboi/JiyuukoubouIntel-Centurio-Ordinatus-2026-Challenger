@@ -132,8 +132,10 @@ def main():
                     serialCommunicator.sendCommand(ser, velocityX, velocityX, MAX_VELOCITY, "F",) #Move towards the ball
                 else:
                     serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
+                    previous_time = time.perf_counter()
         else:
             serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
+            previous_time = time.perf_counter()
 
         cv2.imshow("FaceBall", frame)
 
