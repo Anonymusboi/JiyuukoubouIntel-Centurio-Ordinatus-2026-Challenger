@@ -4,8 +4,8 @@ import datetime
 import random
 from collections import deque
 import sys
-sys.path.append(r"D:\MEGA\Clement's School stuff\Repos\markov-babbler-master")
-import babbler
+#sys.path.append(r"D:\MEGA\Clement's School stuff\Repos\markov-babbler-master")
+#import babbler
 import textwrap
 pygame.init()
 
@@ -719,6 +719,7 @@ def render(screen, balls : list[Ball], targetBall : Ball, robot : Robot):
     screen.blit(sideBarRSurface, (windowWidth - sideBarWidthR, topBarHeight))
     screen.blit(sideBarLSurface, (0, topBarHeight))
     screen.blit(bottomBarSurface, (0, topBarHeight + arenaWindowHeight))
+    clock.tick()
     pygame.display.flip()
 
 def debug():
@@ -743,5 +744,5 @@ def debug():
             if event.type == pygame.MOUSEWHEEL:
                 logger.scroll(event.y)  
         render(screen, ball, big, robot)
-        clock.tick()
+
         

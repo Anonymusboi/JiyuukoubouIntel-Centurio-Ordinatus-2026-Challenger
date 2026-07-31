@@ -24,7 +24,7 @@ from rendering import logger as Debug
 
 #Variables related to sending info to serial
 SERIAL_PORT = "COM4" #Serial port duh
-SERIAL_BAUD = 57600 #Serial BAUDRATE
+SERIAL_BAUD = 1000000 #Serial BAUDRATE
 PACKET_HEADER_0 = 0xAA #Packet header bytes for the Arduino to recognize the start of a command packet.
 PACKET_HEADER_1 = 0x55 #Packet header bytes for the Arduino to recognize the start of the next command packet.
 
@@ -35,7 +35,7 @@ def initSerialPort():
         #DONT YOU FUCKING FORGET TO RESET IT OR IT DIES DIPSHIT
         ser.reset_input_buffer()
         ser.reset_output_buffer()
-        Debug.log("PYTHON", f"Opened serial port {SERIAL_PORT} @ {SERIAL_BAUD}")
+        print("PYTHON", f"Opened serial port {SERIAL_PORT} @ {SERIAL_BAUD}")
         return ser
     #check if serial port opened
     except Exception as exc:
@@ -58,10 +58,10 @@ def readSerial(ser, timeout=1.0):
             return False
         if not line:
             continue
-        Debug.log("PYTHON", "[SERIAL MONITOR]", line)
+        Debug.log("SERIAL MONITOR", line)
         if line == "END":
             return True
-    Debug.log("PYTHON", "[SERIAL MONITOR] timed out waiting for END")
+    Debug.log("PYTHON", "timed out waiting for END")
     return False
 
 #this is the juicy part. Basically, it takes the values we send for both motors,
@@ -69,8 +69,8 @@ def readSerial(ser, timeout=1.0):
 #The arduino then bitshifts the data to get the values, and then uses that to control the motors.
 def packageCommands(v1, v2, MAX_VALUE):
     # Clip to signed 12-bit range (-2048 to 2047)
-    v1 = int(np.clip(v1, -2048, 2047))
-    v2 = int(np.clip(v2, -2048, 2047))
+    v1 = int(np.clip(v1, -MAX_VALUE, MAX_VALUE))
+    v2 = int(np.clip(v2, -MAX_VALUE, MAX_VALUE))
     
     # Convert to unsigned 12-bit for transmission (two's complement)
     if v1 < 0:

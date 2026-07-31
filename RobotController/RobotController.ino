@@ -8,7 +8,7 @@
 #define BDPIN_PUSH_SW_2         35
 #define BDPIN_BUZZER_           31
 
-#define BAUDRATE  57600
+#define BAUDRATE  1000000
 #define PACKET_HEADER_0 0xAA
 #define PACKET_HEADER_1 0x55
 #define PACKET_PAYLOAD_SIZE 3
@@ -21,10 +21,10 @@ Dynamixel2Arduino dxl(Serial3, DXL_DIR_PIN);
 bool result = false;
 int led_pin = 13;
 int led_pin_user[4] = { BDPIN_LED_USER_1, BDPIN_LED_USER_2, BDPIN_LED_USER_3, BDPIN_LED_USER_4 };
-uint8_t dxl_id[3] = {1, 2, 3};
+uint8_t dxl_id[3] = {1, 2};
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(57600);
+  Serial.begin(BAUDRATE);
 
   pinMode(led_pin, OUTPUT);
   pinMode(led_pin_user[0], OUTPUT);
@@ -35,27 +35,27 @@ void setup() {
 
   // Initialize Dynamixel2Arduino
   dxl.begin(BAUDRATE);
+  dxl.setPortProtocolVersion(2.0);
 
   char response = 'e';
   while(response != 'y') response = Serial.read(); //buffer to wait for python
 
   // Ping and configure motors
-  for(size_t i = 0; i < sizeof(dxl_id); i++){
+  for(int i = 0; i < sizeof(dxl_id); i++){
     uint8_t id = dxl_id[i];
     if(dxl.ping(id)){
-      Serial.println("Succeeded to ping");
-      Serial.print("id : ");
-      Serial.print(id);
+      Serial.print("Succeeded to ping: ");
+      Serial.println(id);
     }
     else {
-      Serial.println("Failed to ping: ");
+      Serial.print("Failed to ping: ");
       Serial.println(id);
     }
   }
 
   // Set motors to velocity control mode and enable torque
-  for(size_t i = 0; i < sizeof(dxl_id); i++){
-    uint8_t id = dxl_id[i];
+  for(int i = 0; i < sizeof(dxl_id); i++){
+    uint16_t id = dxl_id[i];
     if(dxl.setOperatingMode(id, OP_VELOCITY)){
       Serial.print("Set velocity mode for id: ");
       Serial.println(id);

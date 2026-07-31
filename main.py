@@ -24,7 +24,7 @@ cameraFOV = cameraVision.cameraFOV
 
 
 #Variables related to sending goalVelocity to the motors
-MAX_VELOCITY = 1023 #Max size for 10-bit values, to make sure that the values we send are within the dynamixel's goalVel range.
+MAX_VELOCITY = 255 #Max size for 10-bit values, to make sure that the values we send are within the dynamixel's goalVel range.
 RVELOCITY_SCALE = config["tracking_calibration"]["turn_velocity_scale"] #Scale factor for converting pixel offset to motor velocity FOR ROTATION
 AVELOCITY_SCALE = config["tracking_calibration"]["approach_velocity_scale"] #APPROACHING BALL
 
@@ -71,16 +71,26 @@ def main():
         while time.time() < deadline:
             line = ser.readline().decode('utf-8', errors='ignore').strip()
             if line:
-                Debug.log("SERIAL MONITOR", line)
+                print("SERIAL MONITOR", line)
             if line == "Setup concluded.":
                 break
         else:
-            Debug.log("PYTHON", "Something broke during setup, maybe check the power switch?")
+            print("PYTHON Something broke during setup, maybe check the power switch?")
+            exit(0)
     else:
         Debug.log("PYTHON", "Skipped arduino init")
 
     previous_time = time.perf_counter()
-    robot = Robot((134, 65), 5, 5, 0)
+    robotWidth = config["robot"]["width_mm"]/10
+    robotLength = config["robot"]["length_mm"]/10
+    robot = Robot((robotWidth/2, robotLength/2), robotWidth, robotLength, 0)
+    serialCommunicator.sendCommand(ser, 500, -500, MAX_VELOCITY, "R")
+    time.sleep(2.1)
+    serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
+    time.sleep(0.5)
+    #serialCommunicator.sendCommand(ser, 500, -500, MAX_VELOCITY, "R")
+    time.sleep(0.7)
+    serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
     #ACTUAL LOGIC SECTION
     screen = rendering.init()
     while True:
@@ -133,7 +143,7 @@ def main():
                 else:
                     serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
                     previous_time = time.perf_counter()
-        else:
+        #else:
             serialCommunicator.sendCommand(ser, 0, 0, MAX_VELOCITY, "R")
             previous_time = time.perf_counter()
 
